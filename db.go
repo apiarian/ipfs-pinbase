@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 
+	_ "github.com/mattn/go-sqlite3"
+
 	"github.com/pkg/errors"
 )
 
@@ -26,14 +28,17 @@ var migrations []migration = []migration{
 	},
 }
 
-func migrate(db *sql.DB, M []migrations, start int) error {
-	if start == 0 {
+const initialMigrationNumber = -1
+
+func migrate(db *sql.DB, M []migration, start int) error {
+	if start == initialMigrationNumber {
 		_, err := db.Exec(`
 			create table versions (
-				number integer primary key not null,
-				applied_on text not null default (strftime('%Y-%m-%d %H:%M:%f', 'now'))
+				applied_on timestamp primary key not null default (strftime('%Y-%m-%d %H:%M:%f', 'now')),
+				number integer not null
 			);
-		`)
+			insert into versions (number) values (?);
+		`, initialMigrationNumber)
 		if err != nil {
 			return errors.Wrapf(err, "creating versions table")
 		}
@@ -53,7 +58,7 @@ func migrate(db *sql.DB, M []migrations, start int) error {
 			return errors.Wrapf(err, "applying migration %d (%s)", i, m.description)
 		}
 
-		_, err := db.Exec("insert into versions (number) values (?)", i)
+		_, err = db.Exec("insert into versions (number) values (?)", i)
 		if err != nil {
 			return errors.Wrapf(err, "inserting version number %d", i)
 		}
@@ -70,37 +75,32 @@ func Open(path string) (*sql.DB, error) {
 		return nil, errors.Wrap(err, "check existence of database")
 	}
 
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("sqlite3", path)
 	if err != nil {
 		return nil, errors.Wrap(err, "open db")
 	}
 
 	if !dbExists {
-		err = migrate(db, migrations, 0)
+		err = migrate(db, migrations, initialMigrationNumber)
 		if err != nil {
 			return nil, errors.Wrap(err, "migrate initial db")
 		}
 	} else {
-		r, err := db.QueryRow(`select max(number) from versions`)
+		var n int
+		err := db.QueryRow(`select max(number) from versions`).Scan(&n)
 		if err != nil {
 			return nil, errors.Wrap(err, "find latest version")
-		}
-
-		var n int
-		err = r.Scan(&n)
-		if err != nil {
-			return nil, errors.Wrap(err, "extract latest version number")
 		}
 
 		if n < len(migrations)-1 {
 			db.Close()
 
-			err := copyFile(dbPath+".bkp", dbPath)
+			err := copyFile(path+".bkp", path)
 			if err != nil {
 				return nil, errors.Wrap(err, "backup db")
 			}
 
-			db, err = sql.Open("sqlite3", dbPath)
+			db, err = sql.Open("sqlite3", path)
 			if err != nil {
 				return nil, errors.Wrap(err, "reopen db")
 			}
@@ -128,7 +128,7 @@ func copyFile(dst, src string) error {
 	}
 	defer out.Close()
 
-	_, err := io.Copy(out, in)
+	_, err = io.Copy(out, in)
 	return errors.Wrap(err, "copy src to dst")
 }
 
