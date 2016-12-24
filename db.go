@@ -1,10 +1,11 @@
 package main
 
 import (
-	"database/sql"
 	"io"
 	"log"
 	"os"
+
+	"github.com/jmoiron/sqlx"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -30,17 +31,17 @@ var migrations []migration = []migration{
 
 const initialMigrationNumber = -1
 
-func migrate(db *sql.DB, M []migration, start int) error {
+func migrate(db *sqlx.DB, M []migration, start int) error {
 	if start == initialMigrationNumber {
 		_, err := db.Exec(`
-			create table versions (
-				applied_on timestamp primary key not null default (strftime('%Y-%m-%d %H:%M:%f', 'now')),
-				number integer not null
+			create table schema_versions (
+				number integer primary key not null,
+				applied_on timestamp not null default (strftime('%Y-%m-%d %H:%M:%f', 'now'))
 			);
-			insert into versions (number) values (?);
+			insert into schema_versions (number) values (?);
 		`, initialMigrationNumber)
 		if err != nil {
-			return errors.Wrapf(err, "creating versions table")
+			return errors.Wrapf(err, "creating schema_versions table")
 		}
 	}
 
@@ -58,7 +59,7 @@ func migrate(db *sql.DB, M []migration, start int) error {
 			return errors.Wrapf(err, "applying migration %d (%s)", i, m.description)
 		}
 
-		_, err = db.Exec("insert into versions (number) values (?)", i)
+		_, err = db.Exec("insert into schema_versions (number) values (?)", i)
 		if err != nil {
 			return errors.Wrapf(err, "inserting version number %d", i)
 		}
@@ -69,13 +70,13 @@ func migrate(db *sql.DB, M []migration, start int) error {
 	return nil
 }
 
-func Open(path string) (*sql.DB, error) {
+func Open(path string) (*sqlx.DB, error) {
 	dbExists, err := exists(path)
 	if err != nil {
 		return nil, errors.Wrap(err, "check existence of database")
 	}
 
-	db, err := sql.Open("sqlite3", path)
+	db, err := sqlx.Connect("sqlite3", path)
 	if err != nil {
 		return nil, errors.Wrap(err, "open db")
 	}
@@ -87,7 +88,7 @@ func Open(path string) (*sql.DB, error) {
 		}
 	} else {
 		var n int
-		err := db.QueryRow(`select max(number) from versions`).Scan(&n)
+		err := db.Get(&n, `select max(number) from schema_versions`)
 		if err != nil {
 			return nil, errors.Wrap(err, "find latest version")
 		}
@@ -100,7 +101,7 @@ func Open(path string) (*sql.DB, error) {
 				return nil, errors.Wrap(err, "backup db")
 			}
 
-			db, err = sql.Open("sqlite3", path)
+			db, err = sqlx.Connect("sqlite3", path)
 			if err != nil {
 				return nil, errors.Wrap(err, "reopen db")
 			}
