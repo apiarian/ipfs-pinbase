@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -70,47 +71,84 @@ func migrate(db *sqlx.DB, M []migration, start int) error {
 	return nil
 }
 
+func pathToDSN(path string) string {
+	return fmt.Sprintf("file:%s?_loc=UTC", path)
+}
+
 func Open(path string) (*sqlx.DB, error) {
-	dbExists, err := exists(path)
-	if err != nil {
-		return nil, errors.Wrap(err, "check existence of database")
+	return open(path, migrations)
+}
+
+func open(path string, M []migration) (*sqlx.DB, error) {
+	var dbExists bool
+	var err error
+
+	if path == ":memory:" {
+		log.Print("warning: :memory: db should only be used in testing")
+	} else {
+		dbExists, err = exists(path)
+		if err != nil {
+			return nil, errors.Wrap(err, "check existence of database")
+		}
 	}
 
-	db, err := sqlx.Connect("sqlite3", path)
+	db, err := sqlx.Connect("sqlite3", pathToDSN(path))
 	if err != nil {
 		return nil, errors.Wrap(err, "open db")
 	}
 
 	if !dbExists {
-		err = migrate(db, migrations, initialMigrationNumber)
+		err = migrate(db, M, initialMigrationNumber)
 		if err != nil {
 			return nil, errors.Wrap(err, "migrate initial db")
 		}
-	} else {
-		var n int
-		err := db.Get(&n, `select max(number) from schema_versions`)
+
+		return db, nil
+	}
+
+	var n int
+	err = db.Get(&n, `select max(number) from schema_versions`)
+	if err != nil {
+		return nil, errors.Wrap(err, "find latest version")
+	}
+
+	if n < len(M)-1 {
+		err := db.Close()
 		if err != nil {
-			return nil, errors.Wrap(err, "find latest version")
+			return nil, errors.Wrap(err, "close the db")
 		}
 
-		if n < len(migrations)-1 {
-			db.Close()
-
-			err := copyFile(path+".bkp", path)
-			if err != nil {
-				return nil, errors.Wrap(err, "backup db")
-			}
-
-			db, err = sqlx.Connect("sqlite3", path)
-			if err != nil {
-				return nil, errors.Wrap(err, "reopen db")
-			}
-
-			err = migrate(db, migrations, n)
-			if err != nil {
-				return nil, errors.Wrap(err, "migrate existing db")
-			}
+		err = copyFile(path+".migration", path)
+		if err != nil {
+			return nil, errors.Wrap(err, "create migration db")
 		}
+
+		db, err = sqlx.Connect("sqlite3", pathToDSN(path+".migration"))
+		if err != nil {
+			return nil, errors.Wrap(err, "open migration db")
+		}
+
+		err = migrate(db, M, n+1)
+		if err != nil {
+			return nil, errors.Wrap(err, "migrate existing db")
+		}
+
+		err = db.Close()
+		if err != nil {
+			return nil, errors.Wrap(err, "close the migration db")
+		}
+
+		err = os.Rename(path, path+".bkp")
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to backup current db")
+		}
+
+		err = os.Rename(path+".migration", path)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to move migrated db to the main path")
+		}
+
+		return Open(path)
 	}
 
 	return db, nil

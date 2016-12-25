@@ -1,6 +1,9 @@
 package main
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -10,7 +13,7 @@ import (
 )
 
 func TestMigrateNilMigration(t *testing.T) {
-	db, err := sqlx.Connect("sqlite3", "file::memory:?_loc=UTC")
+	db, err := sqlx.Connect("sqlite3", pathToDSN(":memory:"))
 	fatalIfErr(t, "failed to connect to db", err)
 	defer db.Close()
 
@@ -39,7 +42,7 @@ func TestMigrateNilMigration(t *testing.T) {
 }
 
 func TestMigrateMultipleTimes(t *testing.T) {
-	db, err := sqlx.Connect("sqlite3", "file::memory:?_loc=UTC")
+	db, err := sqlx.Connect("sqlite3", pathToDSN(":memory:"))
 	fatalIfErr(t, "failed to connect to db", err)
 	defer db.Close()
 
@@ -131,7 +134,7 @@ func TestMigrateMultipleTimes(t *testing.T) {
 }
 
 func TestMigrateFellSwoop(t *testing.T) {
-	db, err := sqlx.Connect("sqlite3", "file::memory:?_loc=UTC")
+	db, err := sqlx.Connect("sqlite3", pathToDSN(":memory:"))
 	fatalIfErr(t, "failed to connect to db", err)
 	defer db.Close()
 
@@ -192,5 +195,153 @@ func TestMigrateFellSwoop(t *testing.T) {
 
 	if foos[1].Baz != 3.14 {
 		t.Errorf("the second foo does not have a 3.14 baz: %f", foos[0].Baz)
+	}
+}
+
+func TestOpen(t *testing.T) {
+	dir, err := ioutil.TempDir("", "pinbase-test-open")
+	fatalIfErr(t, "failed to create temporary directory", err)
+	defer os.RemoveAll(dir)
+
+	M := []migration{
+		migration{
+			description: "step 1",
+			statement: `
+						create table foos(
+							id integer primary key not null,
+							bar text not null
+						);
+					`,
+		},
+		migration{
+			description: "step 2",
+			statement:   "alter table foos add column baz real not null default 0.0",
+		},
+		migration{
+			description: "broken step",
+			statement:   "foo bar baz asdf",
+		},
+	}
+
+	dbPath := filepath.Join(dir, "test.db")
+
+	dbExists, err := exists(dbPath)
+	fatalIfErr(t, "failed to check db existence before tests", err)
+	if dbExists {
+		t.Fatal("database inexplicably exists before the tests")
+	}
+
+	const noBackupPresentVersion = -2
+
+	sequence := []struct {
+		tag                   string
+		M                     []migration
+		expectOpenError       bool
+		maxVersionExpected    int
+		dbShouldExist         bool
+		backupShouldExist     bool
+		backupVersionExpected int
+		migrationShouldExist  bool
+	}{
+		{
+			tag:                   "initial bare database",
+			M:                     nil,
+			expectOpenError:       false,
+			maxVersionExpected:    initialMigrationNumber,
+			dbShouldExist:         true,
+			backupShouldExist:     false,
+			backupVersionExpected: noBackupPresentVersion,
+			migrationShouldExist:  false,
+		},
+		{
+			tag:                   "first migration",
+			M:                     M[0:1],
+			expectOpenError:       false,
+			maxVersionExpected:    0,
+			dbShouldExist:         true,
+			backupShouldExist:     true,
+			backupVersionExpected: initialMigrationNumber,
+			migrationShouldExist:  false,
+		},
+		{
+			tag:                   "second migration",
+			M:                     M[0:2],
+			expectOpenError:       false,
+			maxVersionExpected:    1,
+			dbShouldExist:         true,
+			backupShouldExist:     true,
+			backupVersionExpected: 0,
+			migrationShouldExist:  false,
+		},
+		{
+			tag:                   "broken migration",
+			M:                     M[0:3],
+			expectOpenError:       true,
+			maxVersionExpected:    1,
+			dbShouldExist:         true,
+			backupShouldExist:     true,
+			backupVersionExpected: 0, // means that the backup was not touched either
+			migrationShouldExist:  true,
+		},
+	}
+
+	for _, step := range sequence {
+		t.Logf("# %s", step.tag)
+
+		db, err := open(dbPath, step.M)
+		if !step.expectOpenError {
+			if err != nil {
+				t.Fatalf("got an unexpected db open error: %+v", err)
+			}
+		} else {
+			if err == nil {
+				t.Fatal("did not get an expected open error")
+			}
+
+			db, err = sqlx.Connect("sqlite3", pathToDSN(dbPath))
+			fatalIfErr(t, "failed to force db connection", err)
+		}
+
+		var maxVersion int
+		err = db.Get(&maxVersion, "select max(number) from schema_versions;")
+		fatalIfErr(t, "failed to get maxVersion from database", err)
+
+		if maxVersion != step.maxVersionExpected {
+			t.Errorf("maxVersion is not %d: %d", step.maxVersionExpected, maxVersion)
+		}
+		dbExists, err := exists(dbPath)
+		fatalIfErr(t, "failed to check if db exists on disk", err)
+		if dbExists != step.dbShouldExist {
+			t.Error("got %t db exists but expected %t", dbExists, step.dbShouldExist)
+		}
+
+		backupExists, err := exists(dbPath + ".bkp")
+		fatalIfErr(t, "failed to check if backup db exists on disk", err)
+		if backupExists != step.backupShouldExist {
+			t.Errorf("got %t backup exists but expected %t", backupExists, step.backupShouldExist)
+		}
+
+		if step.backupVersionExpected != noBackupPresentVersion {
+			backupDb, err := sqlx.Connect("sqlite3", pathToDSN(dbPath+".bkp"))
+			fatalIfErr(t, "failed to connect to backup database", err)
+			defer backupDb.Close()
+
+			var backupVersion int
+			err = backupDb.Get(&backupVersion, "select max(number) from schema_versions;")
+			fatalIfErr(t, "failed to get backupVersion from database", err)
+
+			if backupVersion != step.backupVersionExpected {
+				t.Errorf("backupVerion is not %d, %d", step.backupVersionExpected, backupVersion)
+			}
+		}
+
+		migrationExists, err := exists(dbPath + ".migration")
+		fatalIfErr(t, "failed to check if migration db exists on disk", err)
+		if migrationExists != step.migrationShouldExist {
+			t.Errorf("got %t migration exists but expected %t", migrationExists, step.migrationShouldExist)
+		}
+
+		err = db.Close()
+		fatalIfErr(t, "failed to close the db", err)
 	}
 }
