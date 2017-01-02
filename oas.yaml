@@ -1,0 +1,927 @@
+swagger: '2.0'
+info:
+  version: ''
+  title: ipfs-pinbot
+  description: A pin and object manager for IPFS
+host: 'localhost:3000'
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+securityDefinitions:
+  username:
+    type: basic
+  Authorization:
+    name: Authorization
+    type: apiKey
+    in: header
+paths:
+  /login:
+    post:
+      operationId: login
+      summary: Login
+      tags:
+        - Public Endpoints
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: object
+            properties:
+              jwt:
+                type: string
+          examples:
+            application/json:
+              jwt: cupidatat in quis proident pariatur
+        '401':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: authentication required
+              error-details: login failed
+      security:
+        - username: []
+  /pin-summary:
+    get:
+      operationId: pin-summary
+      summary: Pin Summary
+      tags:
+        - Public Endpoints
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: object
+            properties:
+              pins:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    hash:
+                      type: string
+                    parties:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          hash:
+                            type: string
+                          aliases:
+                            type: array
+                            items:
+                              type: string
+                          pinned:
+                            type: boolean
+                        required:
+                          - hash
+                          - aliases
+                          - pinned
+                  required:
+                    - hash
+                    - parties
+            required:
+              - pins
+          examples:
+            application/json:
+              pins:
+                - hash: eiusmod dolor repr
+                  parties:
+                    - hash: aute aliquip est
+                      aliases:
+                        - elit labore aliqua ex esse
+                        - id
+                      pinned: true
+                - hash: laboris esse amet
+                  parties:
+                    - hash: ''
+                      aliases:
+                        - ullamco amet ipsum esse
+                        - id ut deserunt elit eni
+                        - velit
+                        - reprehenderit sit
+                      pinned: true
+                    - hash: exercitation do veniam
+                      aliases:
+                        - nulla Duis Lorem aliquip est
+                        - tempor
+                        - eu amet elit nostrud
+                        - 'off'
+                        - in consectetur
+                      pinned: true
+                    - hash: adipisicing consectetur fugiat proident
+                      aliases:
+                        - ex cupidatat reprehenderit est eiusmod
+                        - Lorem ex pariatur dolor commodo
+                        - incididunt enim irure
+                        - Excepteur
+                      pinned: false
+                    - hash: ullamco Excepteur qui
+                      aliases:
+                        - magna deserunt sit
+                        - in cupidatat eu
+                        - culpa deserunt tempor quis
+                      pinned: false
+                    - hash: ''
+                      aliases:
+                        - velit nostrud
+                        - deserunt minim aliquip qui
+                        - ea in
+                        - ad sunt non
+                        - deserunt et
+                      pinned: false
+  '/nodes/{hash}':
+    parameters:
+      - name: hash
+        in: path
+        required: true
+        type: string
+    get:
+      operationId: GET-node
+      summary: Get Node
+      tags:
+        - Nodes
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/node-output'
+          examples:
+            application/json:
+              hash: node-hash
+              description: Excepteur cupidatat occaecat dolore dolor
+        '404':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: not found
+              error-details: node not found
+      security:
+        - Authorization: []
+    put:
+      operationId: PUT-node
+      summary: Update Node
+      tags:
+        - Nodes
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/node-edit'
+            example:
+              description: exercitation ad pariatur in
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/node-output'
+          examples:
+            application/json:
+              hash: Ut eiusmod Duis sed
+              description: ex
+        '400':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: invalid request
+              error-details: description must not be empty
+        '403':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: cannot update node
+              error-details: only administrators may update nodes
+        '404':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: node not found
+              error-details: could not find the node
+      security:
+        - Authorization: []
+    delete:
+      operationId: DELETE-node
+      summary: Delete Node
+      tags:
+        - Nodes
+      responses:
+        '204':
+          description: ''
+        '403':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: cannot delete node
+              error-details: only administrators may delete nodes
+        '404':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: node not found
+              error-details: could not find the node
+      security:
+        - Authorization: []
+  /nodes:
+    get:
+      operationId: LIST-nodes
+      summary: List Nodes
+      tags:
+        - Nodes
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/node-output'
+          examples:
+            application/json:
+              - hash: Lorem
+                description: commodo incididunt consectetur sunt laboris
+              - hash: qui magna
+                description: dolor est consequat sed
+              - hash: consequat ad
+                description: dolore nulla consequat
+      security:
+        - Authorization: []
+    post:
+      operationId: POST-node
+      summary: Create Node
+      tags:
+        - Nodes
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/node-create'
+            example:
+              api-address: '1.2.3.4:5001'
+              description: commodo in amet
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/node-output'
+          examples:
+            application/json:
+              hash: enim minim esse q
+              description: veniam mollit officia eiusmod
+        '400':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: request format invalid
+              error-details: the api-address and description fields are required
+        '403':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: cannot add node
+              error-details: only administrators may add nodes
+        '409':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: node exists
+              error-details: node already exists at 'node-hash'
+        '500':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: failed to add node
+              error-details: 'could not reach node API: reason'
+      security:
+        - Authorization: []
+  '/parties/{hash}':
+    parameters:
+      - name: hash
+        in: path
+        required: true
+        type: string
+    get:
+      operationId: GET-party
+      summary: Get Party
+      tags:
+        - Parties
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/party-output'
+          examples:
+            application/json:
+              hash: dolor tempor cupidatat
+              description: veniam aliquip commodo velit
+              admin: false
+              type: node
+        '404':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: not found
+              error-details: party not found
+      security:
+        - Authorization: []
+    put:
+      operationId: PUT-party
+      summary: Update Party
+      tags:
+        - Parties
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/party-edit'
+            example:
+              description: ipsum
+              admin: true
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/party-output'
+          examples:
+            application/json:
+              hash: Excepteur proident
+              description: culpa
+              admin: true
+              type: actor
+        '403':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: cannot update party
+              error-details: only administrators may set the admin flag on a party
+        '404':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: not found
+              error-details: party not found
+      security:
+        - Authorization: []
+  /parties:
+    get:
+      operationId: LIST-parties
+      summary: List Parties
+      tags:
+        - Parties
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/party-output'
+          examples:
+            application/json:
+              - hash: mollit incididunt officia laboris
+                description: dolore sunt qui
+                admin: false
+                type: node
+      security:
+        - Authorization: []
+    post:
+      operationId: POST-party
+      summary: Create Party
+      tags:
+        - Parties
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/party-create'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/party-output'
+        '400':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: validation error
+              error-details: something is invalid
+        '403':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: cannot create party
+              error-details: only administrators may create parties
+        '500':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: could not find object
+              error-details: could not find the object associated with the hash provided
+      security:
+        - Authorization: []
+  '/parties/{id}':
+    parameters:
+      - name: id
+        in: path
+        required: true
+        type: string
+    delete:
+      operationId: DELETE-party
+      summary: Delete Party
+      tags:
+        - Parties
+      responses:
+        '204':
+          description: ''
+        '403':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: cannot delete party
+              error-details: only administrators and the parties themselves may delete a party
+        '404':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: not found
+              error-details: party not found
+      security:
+        - Authorization: []
+  '/parties/{party-hash}/pins/{pin-hash}':
+    parameters:
+      - name: party-hash
+        in: path
+        required: true
+        type: string
+      - name: pin-hash
+        in: path
+        required: true
+        type: string
+    get:
+      operationId: GET-pin
+      summary: Get Pin
+      tags:
+        - Party-Pins
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/pin-output'
+          examples:
+            application/json:
+              hash: cupidatat
+              aliases:
+                - minim sit
+                - officia dese
+                - ut proident ullamco labore nisi
+                - ullamco
+              pinned: false
+              nodes:
+                - incididunt aliquip ex aliqua
+                - id ut non ipsum
+              scope: unattributed
+        '404':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: not found
+              error-details: pin not found
+      security:
+        - Authorization: []
+    put:
+      operationId: PUT-pin
+      summary: Update Pin
+      tags:
+        - Party-Pins
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/pin-edit'
+            example:
+              pinned: true
+              target_nodes:
+                - labore ut
+                - eu culpa enim consequat pariatu
+              description: tempor dolor
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/pin-output'
+          examples:
+            application/json:
+              hash: magna ullamco nulla Lorem
+              aliases:
+                - sit mollit exerci
+                - ipsum ex
+                - sint elit consequat in
+              pinned: false
+              nodes:
+                - reprehenderit esse minim pariatur deserunt
+                - deserunt
+                - sed
+              scope: public
+        '403':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: cannot update pin
+              error-details: only administrators or parties themselves may edit a party's pin
+        '404':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: not found
+              error-details: pin not found
+      security:
+        - Authorization: []
+    delete:
+      operationId: DELETE-pin
+      summary: Delete Pin
+      tags:
+        - Party-Pins
+      responses:
+        '204':
+          description: ''
+        '403':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: cannot delete pin
+              error-details: only administrators and the parties themselves may delete a pin
+        '404':
+          description: ''
+          examples:
+            application/json:
+              error-message: not found
+              error-details: pin not found
+      security:
+        - Authorization: []
+  '/parties/{party-hash}/pins':
+    parameters:
+      - name: party-hash
+        in: path
+        required: true
+        type: string
+    get:
+      operationId: LIST-pins
+      summary: List Pins
+      tags:
+        - Party-Pins
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/pin-output'
+          examples:
+            application/json:
+              - hash: la
+                aliases:
+                  - velit sunt tempor adipisicing laboris
+                  - sint in offi
+                  - ipsum Duis
+                pinned: true
+                nodes:
+                  - officia ipsum occaecat amet ut
+                  - deserunt
+                  - Lorem ut
+                  - ut mollit Excepteur
+                scope: public
+      security:
+        - Authorization: []
+    post:
+      operationId: POST-pin
+      summary: Create Pin
+      tags:
+        - Party-Pins
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/pin-create'
+            example:
+              hash: dolor
+              description: aliquip cupidatat mollit eiusmod proident
+              pinned: false
+              target_nodes:
+                - all
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/pin-output'
+          examples:
+            application/json:
+              hash: in reprehenderit
+              aliases:
+                - sed Excepteur ess
+              pinned: false
+              nodes:
+                - Excepte
+                - laborum non
+                - ipsum in velit anim quis
+                - dolor pariatur sint
+              scope: public
+        '400':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: validation error
+              error-details: something is invalid
+        '403':
+          description: ''
+          examples:
+            application/json:
+              error-message: cannot create pin
+              error-details: only administrators or the parties themselves may create pins
+        '500':
+          description: ''
+          schema:
+            $ref: '#/definitions/error-message'
+          examples:
+            application/json:
+              error-message: could not find object
+              error-details: could not find the object associated with the hash provided
+      security:
+        - Authorization: []
+definitions:
+  node-create:
+    type: object
+    properties:
+      api-address:
+        type: string
+      description:
+        type: string
+    required:
+      - api-address
+      - description
+    example:
+      api-address: '1.2.3.4:5001'
+      description: commodo in amet
+  node-output:
+    type: object
+    properties:
+      hash:
+        type: string
+      description:
+        type: string
+    required:
+      - hash
+      - description
+    example:
+      hash: node-hash
+      description: ut conse
+  node-edit:
+    type: object
+    properties:
+      description:
+        type: string
+    required:
+      - description
+    example:
+      description: nostrud ullamco esse
+  error-message:
+    type: object
+    properties:
+      error-message:
+        type: string
+      error-details:
+        type: string
+    required:
+      - error-message
+      - error-details
+    example:
+      error-message: dolore eu ess
+      error-details: exercitation irure quis et
+  party-create:
+    type: object
+    properties:
+      hash:
+        type: string
+      description:
+        type: string
+      admin:
+        type: boolean
+      type:
+        type: string
+        enum:
+          - node
+          - actor
+    required:
+      - hash
+      - description
+      - type
+    example:
+      hash: magna veniam Lorem est ea
+      description: dolor dolore et
+      admin: true
+      type: actor
+  party-output:
+    properties:
+      hash:
+        type: string
+      description:
+        type: string
+      admin:
+        type: boolean
+      type:
+        type: string
+        enum:
+          - node
+          - actor
+    required:
+      - hash
+      - description
+      - admin
+      - type
+    example:
+      hash: est exercitation laborum dolore elit
+      description: ut anim
+      admin: false
+      type: node
+  party-edit:
+    type: object
+    properties:
+      description:
+        type: string
+      admin:
+        type: boolean
+    example:
+      description: nostrud ullamco esse
+  pin-create:
+    type: object
+    properties:
+      hash:
+        type: string
+      aliases:
+        type: array
+        items:
+          type: string
+      pinned:
+        type: boolean
+      target_nodes:
+        anyOf:
+          - uniqueItems: true
+            minItems: 1
+            maxItems: 1
+            items:
+              type: string
+              enum:
+                - any
+                - all
+          - items:
+              type: string
+        type: array
+      scope:
+        type: string
+        enum:
+          - public
+          - private
+          - unattributed
+    required:
+      - hash
+      - aliases
+      - pinned
+      - target_nodes
+      - scope
+    example:
+      hash: dolore labore laboris
+      aliases:
+        - tempor culpa magna est
+        - in cupidatat esse
+        - 'eiusmod '
+        - adipisicing eu amet elit labore
+      pinned: false
+      target_nodes:
+        - fugiat consectetur nostrud
+      scope: unattributed
+  pin-output:
+    type: object
+    properties:
+      hash:
+        type: string
+      aliases:
+        type: array
+        items:
+          type: string
+      pinned:
+        type: boolean
+      nodes:
+        type: array
+        items:
+          type: string
+      scope:
+        type: string
+        enum:
+          - public
+          - private
+          - unattributed
+    required:
+      - hash
+      - aliases
+      - pinned
+      - nodes
+      - scope
+    example:
+      hash: cillum Duis dolor
+      aliases:
+        - aliquip pariatur anim laborum
+        - mi
+        - magna
+      pinned: false
+      nodes:
+        - ea culpa cupidatat proident
+        - adipisicing
+        - exercitation ut
+        - exercitation veniam Duis dolore
+      scope: private
+  pin-edit:
+    type: object
+    properties:
+      aliases:
+        type: array
+        items:
+          type: string
+      pinned:
+        type: boolean
+      target_nodes:
+        anyOf:
+          - uniqueItems: true
+            minItems: 1
+            maxItems: 1
+            items:
+              type: string
+              enum:
+                - all
+          - items:
+              type: string
+        type: array
+      scope:
+        type: string
+        enum:
+          - public
+          - private
+          - unattributed
+    required:
+      - aliases
+      - pinned
+      - target_nodes
+      - scope
+    example:
+      aliases:
+        - 'eu '
+        - occaecat ut sint Exce
+      pinned: false
+      target_nodes:
+        - all
+      scope: unattributed
