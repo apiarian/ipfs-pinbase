@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"time"
@@ -43,49 +42,8 @@ type LoginResponse struct {
 	JWT string `json:"jwt"`
 }
 
-type ErrorResponse struct {
-	Message string `json:"error-message"`
-	Details string `json:"error-details"`
-}
-
-func MarshalResponse(w http.ResponseWriter, c int, data interface{}) {
-	j, err := json.Marshal(data)
-
-	if err != nil {
-		log.Printf("failed to marshal JSON: %+v", err)
-
-		w.WriteHeader(http.StatusInternalServerError)
-
-		w.Write(
-			[]byte(
-				`{"error-message":"internal server error","error-details":"can't even."}`,
-			),
-		)
-
-		return
-	}
-
-	w.WriteHeader(c)
-	_, err = w.Write(j)
-
-	if err != nil {
-		log.Printf("failed to write response: %+v", err)
-	}
-}
-
-func InternalServerError(w http.ResponseWriter) {
-	MarshalResponse(
-		w,
-		http.StatusInternalServerError,
-		ErrorResponse{
-			Message: "internal server error",
-			Details: "can't even.",
-		},
-	)
-}
-
 func (l *Login) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
+	SetContentTypeJSON(w)
 
 	username, password, ok := r.BasicAuth()
 
