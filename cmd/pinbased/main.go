@@ -13,10 +13,11 @@ import (
 func main() {
 	root := goji.NewMux()
 
-	root.Handle(
-		pat.Post("/login"),
-		handlers.NewLogin(),
-	)
+	login, err := handlers.NewLogin([]byte("foo"), nil)
+	if err != nil {
+		log.Fatalf("failed to create login handler: %+v", err)
+	}
+	root.Handle(pat.Post("/login"), login)
 
 	apiAddress := "localhost:3000"
 	log.Print("listening on ", apiAddress)
