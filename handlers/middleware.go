@@ -13,19 +13,22 @@ import (
 	"github.com/pkg/errors"
 )
 
-const JWTSubjectContextKey = "jwt-subject"
+const (
+	JWTSubjectContextKey    = "jwt-subject"
+	AuthorizationContextKey = "subject-permissions"
+)
 
-type AuthRequirer struct {
+type AuthenticationRequirer struct {
 	key []byte
 }
 
-func NewAuthRequirer(jwtKey []byte) (*AuthRequirer, error) {
-	return &AuthRequirer{
+func NewAuthenticationRequirer(jwtKey []byte) (*AuthenticationRequirer, error) {
+	return &AuthenticationRequirer{
 		key: jwtKey,
 	}, nil
 }
 
-func (ar *AuthRequirer) Wrap(h http.Handler) http.Handler {
+func (ar *AuthenticationRequirer) Wrap(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		subject, err := ar.checkAuthHeader(r)
 		if err != nil {
@@ -50,7 +53,7 @@ func (ar *AuthRequirer) Wrap(h http.Handler) http.Handler {
 	})
 }
 
-func (ar *AuthRequirer) checkAuthHeader(r *http.Request) (string, error) {
+func (ar *AuthenticationRequirer) checkAuthHeader(r *http.Request) (string, error) {
 	h := r.Header.Get("Authorization")
 	if h == "" {
 		return "", errors.New("no authorization header")
@@ -93,4 +96,51 @@ func (ar *AuthRequirer) checkAuthHeader(r *http.Request) (string, error) {
 	}
 
 	return claims.Subject, nil
+}
+
+type Authorization struct {
+	Admin bool
+}
+
+type AuthorizationStorage interface {
+	GetAuthorization(string) (*Authorization, error)
+}
+
+type AuthorizationInjector struct {
+	store AuthorizationStorage
+}
+
+func NewAuthorizationInjector(as AuthorizationStorage) (*AuthorizationInjector, error) {
+	return &AuthorizationInjector{
+		store: as,
+	}, nil
+}
+
+func (ai *AuthorizationInjector) Wrap(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authorization, err := ai.getAuthorization(r)
+		if err != nil {
+			log.Printf("error getting authorization: %+v", err)
+
+			SetContentTypeJSON(w)
+			InternalServerError(w)
+			return
+		}
+
+		r = r.WithContext(context.WithValue(r.Context(), AuthorizationContextKey, authorization))
+
+		h.ServeHTTP(w, r)
+	})
+}
+
+func (ai *AuthorizationInjector) getAuthorization(r *http.Request) (*Authorization, error) {
+	subject, ok := r.Context().Value(JWTSubjectContextKey).(string)
+
+	if !ok {
+		return nil, errors.New("no JWT subject in context")
+	}
+
+	auth, err := ai.store.GetAuthorization(subject)
+
+	return auth, errors.Wrap(err, "get authorization")
 }
