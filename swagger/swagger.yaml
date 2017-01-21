@@ -1,0 +1,81 @@
+consumes:
+- application/json
+- application/xml
+- application/gob
+- application/x-gob
+definitions:
+  PinbaseNode:
+    description: An IPFS node (default view)
+    example:
+      api-url: Ut provident ratione doloribus id consequuntur.
+      description: Reiciendis necessitatibus dolor magnam voluptates.
+      hash: Iusto nostrum architecto.
+    properties:
+      api-url:
+        description: The API URL for the node, possibly relative to the pinbase (i.e.
+          localhost)
+        example: Ut provident ratione doloribus id consequuntur.
+        type: string
+      description:
+        description: A helpful description of the node
+        example: Reiciendis necessitatibus dolor magnam voluptates.
+        type: string
+      hash:
+        description: The nodes' unique hash
+        example: Iusto nostrum architecto.
+        type: string
+    required:
+    - hash
+    - description
+    - api-url
+    title: 'Mediatype identifier: application/vnd.pinbase.node+json; view=default'
+    type: object
+host: localhost:3000
+info:
+  contact:
+    email: al@megamicron.net
+    name: Aleksandr Pasechnik
+    url: https://megamicron.net
+  description: The IPFS-pinbase API
+  license:
+    name: MIT
+  title: pinbase
+  version: "0.1"
+paths:
+  /nodes/{nodeHash}:
+    get:
+      description: Get node by hash
+      operationId: node#show
+      parameters:
+      - description: Node Hash
+        in: path
+        name: nodeHash
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PinbaseNode'
+        "404":
+          description: Not Found
+      schemes:
+      - http
+      summary: show node
+      tags:
+      - node
+produces:
+- application/json
+- application/xml
+- application/gob
+- application/x-gob
+responses:
+  NotFound:
+    description: Not Found
+  OK:
+    description: OK
+    schema:
+      $ref: '#/definitions/PinbaseNode'
+schemes:
+- http
+swagger: "2.0"
