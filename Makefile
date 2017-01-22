@@ -7,6 +7,7 @@ gen: ## the normal workflow goa regenration process
 	goagen client -d $(design_package)
 	# goagen js -d $(design_package)
 	goagen swagger -d $(design_package)
+	bootprint openapi swagger/swagger.json api-doc
 
 clean: ## remove generated stuff
 	rm -rf app/
@@ -16,11 +17,16 @@ clean: ## remove generated stuff
 	rm -rf js/
 	rm -rf _scaffolds/
 	rm -rf tool/
+	rm -rf api-doc/
 
 gen-bootstrap: ## initial bootstrap (run this first!)
 	goagen bootstrap -d $(design_package)
 
 .PHONY: help
+
+prep: ## install required packages
+	npm install -g bootprint
+	npm install -g bootprint-openapi
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

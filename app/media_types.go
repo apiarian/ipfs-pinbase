@@ -37,3 +37,20 @@ func (mt *PinbaseNode) Validate() (err error) {
 	}
 	return
 }
+
+// PinbaseNodeCollection is the media type for an array of PinbaseNode (default view)
+//
+// Identifier: application/vnd.pinbase.node+json; type=collection; view=default
+type PinbaseNodeCollection []*PinbaseNode
+
+// Validate validates the PinbaseNodeCollection media type instance.
+func (mt PinbaseNodeCollection) Validate() (err error) {
+	for _, e := range mt {
+		if e != nil {
+			if err2 := e.Validate(); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
+	}
+	return
+}

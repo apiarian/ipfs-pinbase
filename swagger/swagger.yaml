@@ -1,9 +1,25 @@
 consumes:
 - application/json
-- application/xml
-- application/gob
-- application/x-gob
 definitions:
+  CreateNodePayload:
+    example:
+      api-url: Et officia rerum accusamus voluptates atque reprehenderit.
+      description: Vero minus quisquam nulla veritatis atque.
+    properties:
+      api-url:
+        description: The API URL for the node, possibly relative to the pinbase (i.e.
+          localhost)
+        example: Et officia rerum accusamus voluptates atque reprehenderit.
+        type: string
+      description:
+        description: A helpful description of the node
+        example: Vero minus quisquam nulla veritatis atque.
+        type: string
+    required:
+    - api-url
+    - description
+    title: CreateNodePayload
+    type: object
   PinbaseNode:
     description: An IPFS node (default view)
     example:
@@ -30,6 +46,74 @@ definitions:
     - api-url
     title: 'Mediatype identifier: application/vnd.pinbase.node+json; view=default'
     type: object
+  PinbaseNodeCollection:
+    description: PinbaseNodeCollection is the media type for an array of PinbaseNode
+      (default view)
+    example:
+    - api-url: Ut provident ratione doloribus id consequuntur.
+      description: Reiciendis necessitatibus dolor magnam voluptates.
+      hash: Iusto nostrum architecto.
+    - api-url: Ut provident ratione doloribus id consequuntur.
+      description: Reiciendis necessitatibus dolor magnam voluptates.
+      hash: Iusto nostrum architecto.
+    items:
+      $ref: '#/definitions/PinbaseNode'
+    title: 'Mediatype identifier: application/vnd.pinbase.node+json; type=collection;
+      view=default'
+    type: array
+  error:
+    description: Error response media type (default view)
+    example:
+      code: invalid_value
+      detail: Value of ID must be an integer
+      id: 3F1FKVRR
+      meta:
+        timestamp: 1.458609e+09
+      status: "400"
+    properties:
+      code:
+        description: an application-specific error code, expressed as a string value.
+        example: invalid_value
+        type: string
+      detail:
+        description: a human-readable explanation specific to this occurrence of the
+          problem.
+        example: Value of ID must be an integer
+        type: string
+      id:
+        description: a unique identifier for this particular occurrence of the problem.
+        example: 3F1FKVRR
+        type: string
+      meta:
+        additionalProperties: true
+        description: a meta object containing non-standard meta-information about
+          the error.
+        example:
+          timestamp: 1.458609e+09
+        type: object
+      status:
+        description: the HTTP status code applicable to this problem, expressed as
+          a string value.
+        example: "400"
+        type: string
+    title: 'Mediatype identifier: application/vnd.goa.error; view=default'
+    type: object
+  node-payload:
+    example:
+      api-url: Et officia rerum accusamus voluptates atque reprehenderit.
+      description: Vero minus quisquam nulla veritatis atque.
+    properties:
+      api-url:
+        description: The API URL for the node, possibly relative to the pinbase (i.e.
+          localhost)
+        example: Et officia rerum accusamus voluptates atque reprehenderit.
+        type: string
+      description:
+        description: A helpful description of the node
+        example: Vero minus quisquam nulla veritatis atque.
+        type: string
+    title: node-payload
+    type: object
 host: localhost:3000
 info:
   contact:
@@ -42,9 +126,115 @@ info:
   title: pinbase
   version: "0.1"
 paths:
-  /nodes/{nodeHash}:
+  /login:
+    post:
+      description: Get a new JWT token
+      operationId: login#login
+      responses:
+        "204":
+          description: No Content
+          headers:
+            Authorization:
+              description: The new JWT
+              type: string
+      schemes:
+      - http
+      security:
+      - LoginBasicAuth: []
+      summary: login login
+      tags:
+      - login
+  /nodes:
     get:
-      description: Get node by hash
+      description: |-
+        List the nodes available to this pinbase
+
+        Required security scopes:
+          * `node:view`
+      operationId: node#list
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PinbaseNodeCollection'
+      schemes:
+      - http
+      security:
+      - jwt:
+        - node:view
+      summary: list node
+      tags:
+      - node
+    post:
+      description: |-
+        Connect to a node
+
+        Required security scopes:
+          * `node:create`
+      operationId: node#create
+      parameters:
+      - in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/CreateNodePayload'
+      responses:
+        "201":
+          description: Resource created
+          headers:
+            Location:
+              description: href to the created resource
+              pattern: /nodes/.+
+              type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/error'
+      schemes:
+      - http
+      security:
+      - jwt:
+        - node:create
+      summary: create node
+      tags:
+      - node
+  /nodes/{nodeHash}:
+    delete:
+      description: |-
+        Delete a node
+
+        Required security scopes:
+          * `node:delete`
+      operationId: node#delete
+      parameters:
+      - description: Node Hash
+        in: path
+        name: nodeHash
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/error'
+        "404":
+          description: Not Found
+      schemes:
+      - http
+      security:
+      - jwt:
+        - node:delete
+      summary: delete node
+      tags:
+      - node
+    get:
+      description: |-
+        Get node by hash
+
+        Required security scopes:
+          * `node:view`
       operationId: node#show
       parameters:
       - description: Node Hash
@@ -61,21 +251,73 @@ paths:
           description: Not Found
       schemes:
       - http
+      security:
+      - jwt:
+        - node:view
       summary: show node
+      tags:
+      - node
+    patch:
+      description: |-
+        Change a node's address (must be the same node-id) or description
+
+        Required security scopes:
+          * `node:edit`
+      operationId: node#update
+      parameters:
+      - description: Node Hash
+        in: path
+        name: nodeHash
+        required: true
+        type: string
+      - in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/node-payload'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PinbaseNode'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/error'
+        "404":
+          description: Not Found
+      schemes:
+      - http
+      security:
+      - jwt:
+        - node:edit
+      summary: update node
       tags:
       - node
 produces:
 - application/json
-- application/xml
-- application/gob
-- application/x-gob
 responses:
+  NoContent:
+    description: No Content
   NotFound:
     description: Not Found
-  OK:
-    description: OK
-    schema:
-      $ref: '#/definitions/PinbaseNode'
 schemes:
 - http
+securityDefinitions:
+  LoginBasicAuth:
+    type: basic
+  jwt:
+    description: |2-
+
+
+      **Token URL**: http://localhost:3000/login
+
+      **Security Scopes**:
+        * `node:create`: no description
+        * `node:delete`: no description
+        * `node:edit`: no description
+        * `node:view`: no description
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

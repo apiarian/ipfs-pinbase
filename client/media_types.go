@@ -15,6 +15,13 @@ import (
 	"net/http"
 )
 
+// DecodeErrorResponse decodes the ErrorResponse instance encoded in resp body.
+func (c *Client) DecodeErrorResponse(resp *http.Response) (*goa.ErrorResponse, error) {
+	var decoded goa.ErrorResponse
+	err := c.Decoder.Decode(&decoded, resp.Body, resp.Header.Get("Content-Type"))
+	return &decoded, err
+}
+
 // An IPFS node (default view)
 //
 // Identifier: application/vnd.pinbase.node+json; view=default
@@ -46,4 +53,28 @@ func (c *Client) DecodePinbaseNode(resp *http.Response) (*PinbaseNode, error) {
 	var decoded PinbaseNode
 	err := c.Decoder.Decode(&decoded, resp.Body, resp.Header.Get("Content-Type"))
 	return &decoded, err
+}
+
+// PinbaseNodeCollection is the media type for an array of PinbaseNode (default view)
+//
+// Identifier: application/vnd.pinbase.node+json; type=collection; view=default
+type PinbaseNodeCollection []*PinbaseNode
+
+// Validate validates the PinbaseNodeCollection media type instance.
+func (mt PinbaseNodeCollection) Validate() (err error) {
+	for _, e := range mt {
+		if e != nil {
+			if err2 := e.Validate(); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
+	}
+	return
+}
+
+// DecodePinbaseNodeCollection decodes the PinbaseNodeCollection instance encoded in resp body.
+func (c *Client) DecodePinbaseNodeCollection(resp *http.Response) (PinbaseNodeCollection, error) {
+	var decoded PinbaseNodeCollection
+	err := c.Decoder.Decode(&decoded, resp.Body, resp.Header.Get("Content-Type"))
+	return decoded, err
 }

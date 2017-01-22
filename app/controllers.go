@@ -20,21 +20,49 @@ import (
 func initService(service *goa.Service) {
 	// Setup encoders and decoders
 	service.Encoder.Register(goa.NewJSONEncoder, "application/json")
-	service.Encoder.Register(goa.NewGobEncoder, "application/gob", "application/x-gob")
-	service.Encoder.Register(goa.NewXMLEncoder, "application/xml")
 	service.Decoder.Register(goa.NewJSONDecoder, "application/json")
-	service.Decoder.Register(goa.NewGobDecoder, "application/gob", "application/x-gob")
-	service.Decoder.Register(goa.NewXMLDecoder, "application/xml")
 
 	// Setup default encoder and decoder
 	service.Encoder.Register(goa.NewJSONEncoder, "*/*")
 	service.Decoder.Register(goa.NewJSONDecoder, "*/*")
 }
 
+// LoginController is the controller interface for the Login actions.
+type LoginController interface {
+	goa.Muxer
+	Login(*LoginLoginContext) error
+}
+
+// MountLoginController "mounts" a Login resource controller on the given service.
+func MountLoginController(service *goa.Service, ctrl LoginController) {
+	initService(service)
+	var h goa.Handler
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewLoginLoginContext(ctx, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.Login(rctx)
+	}
+	h = handleSecurity("LoginBasicAuth", h)
+	service.Mux.Handle("POST", "/login", ctrl.MuxHandler("Login", h, nil))
+	service.LogInfo("mount", "ctrl", "Login", "action", "Login", "route", "POST /login", "security", "LoginBasicAuth")
+}
+
 // NodeController is the controller interface for the Node actions.
 type NodeController interface {
 	goa.Muxer
+	Create(*CreateNodeContext) error
+	Delete(*DeleteNodeContext) error
+	List(*ListNodeContext) error
 	Show(*ShowNodeContext) error
+	Update(*UpdateNodeContext) error
 }
 
 // MountNodeController "mounts" a Node resource controller on the given service.
@@ -48,12 +76,114 @@ func MountNodeController(service *goa.Service, ctrl NodeController) {
 			return err
 		}
 		// Build the context
+		rctx, err := NewCreateNodeContext(ctx, service)
+		if err != nil {
+			return err
+		}
+		// Build the payload
+		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
+			rctx.Payload = rawPayload.(*CreateNodePayload)
+		} else {
+			return goa.MissingPayloadError()
+		}
+		return ctrl.Create(rctx)
+	}
+	h = handleSecurity("jwt", h, "node:create")
+	service.Mux.Handle("POST", "/nodes", ctrl.MuxHandler("Create", h, unmarshalCreateNodePayload))
+	service.LogInfo("mount", "ctrl", "Node", "action", "Create", "route", "POST /nodes", "security", "jwt")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewDeleteNodeContext(ctx, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.Delete(rctx)
+	}
+	h = handleSecurity("jwt", h, "node:delete")
+	service.Mux.Handle("DELETE", "/nodes/:nodeHash", ctrl.MuxHandler("Delete", h, nil))
+	service.LogInfo("mount", "ctrl", "Node", "action", "Delete", "route", "DELETE /nodes/:nodeHash", "security", "jwt")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewListNodeContext(ctx, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.List(rctx)
+	}
+	h = handleSecurity("jwt", h, "node:view")
+	service.Mux.Handle("GET", "/nodes", ctrl.MuxHandler("List", h, nil))
+	service.LogInfo("mount", "ctrl", "Node", "action", "List", "route", "GET /nodes", "security", "jwt")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
 		rctx, err := NewShowNodeContext(ctx, service)
 		if err != nil {
 			return err
 		}
 		return ctrl.Show(rctx)
 	}
+	h = handleSecurity("jwt", h, "node:view")
 	service.Mux.Handle("GET", "/nodes/:nodeHash", ctrl.MuxHandler("Show", h, nil))
-	service.LogInfo("mount", "ctrl", "Node", "action", "Show", "route", "GET /nodes/:nodeHash")
+	service.LogInfo("mount", "ctrl", "Node", "action", "Show", "route", "GET /nodes/:nodeHash", "security", "jwt")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewUpdateNodeContext(ctx, service)
+		if err != nil {
+			return err
+		}
+		// Build the payload
+		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
+			rctx.Payload = rawPayload.(*NodePayload)
+		} else {
+			return goa.MissingPayloadError()
+		}
+		return ctrl.Update(rctx)
+	}
+	h = handleSecurity("jwt", h, "node:edit")
+	service.Mux.Handle("PATCH", "/nodes/:nodeHash", ctrl.MuxHandler("Update", h, unmarshalUpdateNodePayload))
+	service.LogInfo("mount", "ctrl", "Node", "action", "Update", "route", "PATCH /nodes/:nodeHash", "security", "jwt")
+}
+
+// unmarshalCreateNodePayload unmarshals the request body into the context request data Payload field.
+func unmarshalCreateNodePayload(ctx context.Context, service *goa.Service, req *http.Request) error {
+	payload := &createNodePayload{}
+	if err := service.DecodeRequest(req, payload); err != nil {
+		return err
+	}
+	if err := payload.Validate(); err != nil {
+		// Initialize payload with private data structure so it can be logged
+		goa.ContextRequest(ctx).Payload = payload
+		return err
+	}
+	goa.ContextRequest(ctx).Payload = payload.Publicize()
+	return nil
+}
+
+// unmarshalUpdateNodePayload unmarshals the request body into the context request data Payload field.
+func unmarshalUpdateNodePayload(ctx context.Context, service *goa.Service, req *http.Request) error {
+	payload := &nodePayload{}
+	if err := service.DecodeRequest(req, payload); err != nil {
+		return err
+	}
+	goa.ContextRequest(ctx).Payload = payload.Publicize()
+	return nil
 }
