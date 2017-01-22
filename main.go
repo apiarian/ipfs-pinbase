@@ -3,6 +3,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/apiarian/ipfs-pinbase/app"
 	"github.com/goadesign/goa"
 	"github.com/goadesign/goa/middleware"
@@ -18,15 +20,29 @@ func main() {
 	service.Use(middleware.ErrorHandler(service, true))
 	service.Use(middleware.Recover())
 
+	// Mount security middlewares
+	basicAuth, err := NewBasicAuth()
+	if err != nil {
+		log.Fatalf("failed to create basic auth middlware: %+v", err)
+	}
+
+	jwtAuth, err := NewJWTAuth([]byte("supersecret"))
+	if err != nil {
+		log.Fatalf("failed to create jwt auth middlware: %+v", err)
+	}
+
+	app.UseLoginBasicAuthMiddleware(service, basicAuth)
+	app.UseJWTMiddleware(service, jwtAuth)
+
 	// Mount "login" controller
-	c := NewLoginController(service)
+	c := NewLoginController(service, []byte("supersecret"))
 	app.MountLoginController(service, c)
 	// Mount "node" controller
 	c2 := NewNodeController(service)
 	app.MountNodeController(service, c2)
 
 	// Start service
-	if err := service.ListenAndServe(":3000"); err != nil {
+	if err := service.ListenAndServe("localhost:3000"); err != nil {
 		service.LogError("startup", "err", err)
 	}
 }
