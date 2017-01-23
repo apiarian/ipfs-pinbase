@@ -6,9 +6,11 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/apiarian/ipfs-pinbase/app"
+	jwtgo "github.com/dgrijalva/jwt-go"
 	"github.com/goadesign/goa"
 	"github.com/goadesign/goa/middleware/security/basicauth"
 	"github.com/goadesign/goa/middleware/security/jwt"
+	"github.com/pkg/errors"
 )
 
 func NewBasicAuth() (goa.Middleware, error) {
@@ -39,4 +41,15 @@ func NewJWTAuth(jwtKey []byte) (goa.Middleware, error) {
 		},
 		app.NewJWTSecurity(),
 	), nil
+}
+
+func ExtractJWTSubject(ctx context.Context) (string, error) {
+	token := jwt.ContextJWT(ctx)
+	if token == nil {
+		return "", errors.New("no JWT in context")
+	}
+
+	claims := token.Claims.(jwtgo.MapClaims)
+
+	return claims["sub"].(string), nil
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/apiarian/ipfs-pinbase/app"
 	"github.com/goadesign/goa"
+	"github.com/pkg/errors"
 )
 
 // NodeController implements the node resource.
@@ -39,7 +40,12 @@ func (c *NodeController) Delete(ctx *app.DeleteNodeContext) error {
 func (c *NodeController) List(ctx *app.ListNodeContext) error {
 	// NodeController_List: start_implement
 
-	// Put your logic here
+	subject, err := ExtractJWTSubject(ctx)
+	if err != nil {
+		return errors.Wrap(err, "extract JWT subject")
+	}
+
+	goa.LogInfo(ctx, "found a JWT", "subject", subject)
 
 	// NodeController_List: end_implement
 	res := app.PinbaseNodeCollection{}
