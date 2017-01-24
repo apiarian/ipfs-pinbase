@@ -9,7 +9,7 @@ gen: ## the normal workflow goa regenration process
 	goagen swagger -d $(design_package)
 	bootprint openapi swagger/swagger.json api-doc
 
-clean: ## remove generated stuff
+clean: ## remove generated stuff except for the main package
 	rm -rf app/
 	rm -rf client/
 	rm -rf schema/
