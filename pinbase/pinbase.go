@@ -2,140 +2,45 @@ package pinbase
 
 import (
 	"time"
-
-	"github.com/pkg/errors"
 )
 
-type Node struct {
-	Hash        string
-	Description string
-	APIURL      string
+type NodeManager interface {
+	AddNode(Node) error
+	DeleteNode(hash string) error
+	Node(hash string) (Node, error)
+	Nodes() ([]Node, error)
 }
 
-type NodeStorage interface {
-	Nodes() ([]*Node, error)
-	NodeForHash(hash string) (*Node, error)
-	SaveNode(*Node) error
+type Node interface {
+	Description() string
+	SetDescription(string) error
+
+	Ping() error
+	PleasePin(hash, party string)
+	PleaseUnpin(hash, party string)
+	PinInfo(hash string) *PinInfo
 }
 
-type Party struct {
-	Hash        string
-	Description string
-	Pins        []*Pin
+type PinInfo struct {
+	Hash      string
+	Timestamp time.Time
+	Status    PinStatus
+	Error     error
 }
 
-type Pin struct {
-	Hash    string
-	Aliases []string
-	Pinned  bool
-}
-
-type PartyStorage interface {
-	Parties() ([]*Party, error)
-	PartyForHash(hash string) (*Party, error)
-	SaveParty(*Party) error
-}
-
-type Pinner interface {
-	Pins() (map[string]struct{}, error)
-	Pin(string) error
-	Unpin(string) error
-}
-
-type Intention struct {
-	Party   string
-	Object  string
-	WantPin bool
-}
-
-type InterestStatus struct {
-	PinnerErr   error
-	PinStatuses map[string]PinStatus
-}
-
-type PinStatus struct {
-	Timestamp   time.Time
-	LatestError error
-	State       PinState
-}
-
-type PinState int
+type PinStatus int
 
 const (
-	PinPending PinState = iota
+	PinPending PinStatus = iota
 	PinPinned
 	PinUnpinned
-	PinUnstable
+	PinTrouble
 	PinFailed
-	numPinStates
+	numPinStatuses
 )
 
-type InterestTracker interface {
-	BootstrapInterest([]Intention)
-	UpdateInterest(Intention)
-	InterestDigest() map[string]bool
-	NotifyState(map[string]struct{}, error, map[string]error)
-	Status() *InterestStatus
-}
-
-func ManagePins(
-	done <-chan struct{},
-	pnr Pinner,
-	trkr InterestTracker,
-	intentions <-chan Intention,
-	maxInterval time.Duration,
-) {
-	tryThePins(pnr, trkr)
-
-	t := time.NewTimer(maxInterval)
-
-	for {
-		select {
-		case i := <-intentions:
-			trkr.UpdateInterest(i)
-			tryThePins(pnr, trkr)
-
-		case <-t.C:
-			tryThePins(pnr, trkr)
-
-		case <-done:
-			return
-		}
-
-		if !t.Stop() {
-			<-t.C
-		}
-		t.Reset(maxInterval)
-	}
-}
-
-func tryThePins(pnr Pinner, trkr InterestTracker) {
-	errs := make(map[string]error)
-
-	p, err := pnr.Pins()
-	if err != nil {
-		trkr.NotifyState(p, errors.Wrap(err, "get initial pins"), errs)
-
-		return
-	}
-
-	for hash, want := range trkr.InterestDigest() {
-		_, pinned := p[hash]
-
-		if want && !pinned {
-			errs[hash] = errors.Wrapf(
-				pnr.Pin(hash),
-				"pin %s", hash,
-			)
-
-		} else if !want && pinned {
-			errs[hash] = errors.Wrapf(
-				pnr.Unpin(hash),
-				"unpin %s", hash,
-			)
-		}
-	}
-
-	p, err = pnr.Pins()
-	trkr.NotifyState(p, errors.Wrap(err, "get final state"), errs)
+type Party interface {
+	Hash() string
+	Description() string
+	SetDescription(string) error
 }
