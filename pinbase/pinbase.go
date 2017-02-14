@@ -1,31 +1,38 @@
 package pinbase
 
-import (
-	"time"
-)
+type Hash string
 
-type NodeManager interface {
-	AddNode(Node) error
-	DeleteNode(hash string) error
-	Node(hash string) (Node, error)
-	Nodes() ([]Node, error)
+type PartyCreate struct {
+	ID          Hash
+	Description string
 }
 
-type Node interface {
-	Description() string
-	SetDescription(string) error
-
-	Ping() error
-	PleasePin(hash, party string)
-	PleaseUnpin(hash, party string)
-	PinInfo(hash string) *PinInfo
+type PartyEdit struct {
+	Description string
 }
 
-type PinInfo struct {
-	Hash      string
-	Timestamp time.Time
-	Status    PinStatus
-	Error     error
+type PartyView struct {
+	ID          Hash
+	Description string
+}
+
+type PinCreate struct {
+	ID         Hash
+	Aliases    []string
+	WantPinned bool
+}
+
+type PinEdit struct {
+	Aliases    []string
+	WantPinned bool
+}
+
+type PinView struct {
+	ID         Hash
+	Aliases    []string
+	WantPinned bool
+	Status     PinStatus
+	LastError  error
 }
 
 type PinStatus int
@@ -34,13 +41,23 @@ const (
 	PinPending PinStatus = iota
 	PinPinned
 	PinUnpinned
-	PinTrouble
-	PinFailed
+	PinError
+	PinFatal
 	numPinStatuses
 )
 
-type Party interface {
-	Hash() string
-	Description() string
-	SetDescription(string) error
+type PinService interface {
+	Parties() ([]*PartyView, error)
+	Party(Hash) (*PartyView, error)
+
+	CreateParty(*PartyCreate) error
+	DeleteParty(Hash) error
+	UpdateParty(*PartyEdit) error
+
+	Pins(partyID Hash) ([]*PinView, error)
+	Pin(partyID, pinID Hash) (*PinView, error)
+
+	CreatePin(partyID Hash, pc *PinCreate) error
+	DeletePin(partyID, pinID Hash) error
+	UpdatePin(partyID Hash, pe *PinEdit) error
 }
