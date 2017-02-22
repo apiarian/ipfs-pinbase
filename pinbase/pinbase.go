@@ -71,7 +71,7 @@ type PinService interface {
 type PinBackend interface {
 	PinProcessorBump() <-chan struct{}
 	PinRequirements() map[Hash]bool
-	UpdatePin(pinID Hash, s *PinBackendState)
+	NotifyPin(pinID Hash, s *PinBackendState)
 }
 
 type PinBackendState struct {
@@ -91,17 +91,17 @@ func ManagePins(
 	pj PinJuggler,
 	maxInterval time.Duration,
 ) {
-	ProcessPins(pb, pj)
+	processPins(pb, pj)
 
 	t := time.NewTimer(maxInterval)
 
 	for {
 		select {
 		case <-pb.PinProcessorBump():
-			ProcessPins(pb, pj)
+			processPins(pb, pj)
 
 		case <-t.C:
-			ProcessPins(pb, pj)
+			processPins(pb, pj)
 
 		case <-done:
 			return
@@ -114,14 +114,14 @@ func ManagePins(
 	}
 }
 
-func ProcessPins(pb PinBackend, pj PinJuggler) {
+func processPins(pb PinBackend, pj PinJuggler) {
 	pr := pb.PinRequirements()
 
 	ps, err := pj.Pins()
 
 	if err != nil {
 		for h, _ := range pr {
-			pb.UpdatePin(
+			pb.NotifyPin(
 				h,
 				&PinBackendState{
 					Status:    PinError,
@@ -165,6 +165,6 @@ func ProcessPins(pb PinBackend, pj PinJuggler) {
 			panic("somehow failed to account for the combinations of 2 booleans")
 		}
 
-		pb.UpdatePin(h, &pbs)
+		pb.NotifyPin(h, &pbs)
 	}
 }
