@@ -1,11 +1,57 @@
 package bolt
 
 import (
+	"time"
+
 	"github.com/apiarian/ipfs-pinbase/pinbase"
+	"github.com/boltdb/bolt"
 	"github.com/pkg/errors"
 )
 
+type Client struct {
+	path string
+	db   *bolt.DB
+}
+
+func NewClient(path string) *Client {
+	return &Client{
+		path: path,
+	}
+}
+
+func (c *Client) Open() error {
+	db, err := bolt.Open(
+		c.path,
+		0600,
+		&bolt.Options{
+			Timeout: 1 * time.Second,
+		},
+	)
+	if err != nil {
+		return errors.Wrapf(err, "connect to db at %s", c.path)
+	}
+
+	c.db = db
+
+	return nil
+}
+
+func (c *Client) Close() error {
+	if c.db != nil {
+		return errors.Wrap(c.db.Close(), "close db")
+	}
+
+	return nil
+}
+
+func (c *Client) PinService() pinbase.PinService {
+	return &PinService{
+		client: c,
+	}
+}
+
 type PinService struct {
+	client *Client
 }
 
 //
