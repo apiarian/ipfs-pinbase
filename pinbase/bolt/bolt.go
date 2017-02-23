@@ -8,6 +8,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+var (
+	PartiesBucketKey = []byte("PARTIES")
+)
+
 type Client struct {
 	path string
 	db   *bolt.DB
@@ -33,6 +37,11 @@ func (c *Client) Open() error {
 
 	c.db = db
 
+	err = c.db.Update(setupSchema)
+	if err != nil {
+		return errors.Wrap(err, "setup the schema")
+	}
+
 	return nil
 }
 
@@ -44,14 +53,23 @@ func (c *Client) Close() error {
 	return nil
 }
 
+func setupSchema(tx *bolt.Tx) error {
+	_, err := tx.CreateBucketIfNotExists(PartiesBucketKey)
+	if err != nil {
+		return errors.Wrap(err, "create parties bucket")
+	}
+
+	return nil
+}
+
 func (c *Client) PinService() pinbase.PinService {
 	return &PinService{
-		client: c,
+		db: c.db,
 	}
 }
 
 type PinService struct {
-	client *Client
+	db *bolt.DB
 }
 
 //
