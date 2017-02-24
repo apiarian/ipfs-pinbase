@@ -1,6 +1,8 @@
 package bolt
 
 import (
+	"bytes"
+	"encoding/gob"
 	"time"
 
 	"github.com/apiarian/ipfs-pinbase/pinbase"
@@ -9,7 +11,9 @@ import (
 )
 
 var (
-	PartiesBucketKey = []byte("PARTIES")
+	PartiesBucketKey         = []byte("PARTIES")
+	PartyBucketDataKey       = []byte("DATA")
+	PartyBucketPinsBucketKey = []byte("PINS")
 )
 
 type Client struct {
@@ -76,8 +80,28 @@ type PinService struct {
 // pinbase.PinService implementation
 //
 
+type partyStorage struct {
+	Description string
+}
+
 func (ps *PinService) Parties() ([]*pinbase.PartyView, error) {
-	return nil, errors.New("not implemented")
+	var list []*pinbase.PartyView
+
+	err := ps.db.View(func(tx *bolt.Tx) error {
+		parties := tx.Bucket(PartiesBucketKey)
+		if parties == nil {
+			return errors.New("no parties bucket found")
+		}
+
+		c := parties.Cursor()
+
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			_ = v
+		}
+		return nil
+	})
+
+	return list, err
 }
 
 func (ps *PinService) Party(h pinbase.Hash) (*pinbase.PartyView, error) {
@@ -85,7 +109,46 @@ func (ps *PinService) Party(h pinbase.Hash) (*pinbase.PartyView, error) {
 }
 
 func (ps *PinService) CreateParty(p *pinbase.PartyCreate) error {
-	return errors.New("not implemented")
+	var partyBuf bytes.Buffer
+	enc := gob.NewEncoder(&partyBuf)
+
+	err := enc.Encode(partyStorage{
+		Description: p.Description,
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to encode party data")
+	}
+
+	return ps.db.Update(func(tx *bolt.Tx) error {
+		parties := tx.Bucket(PartiesBucketKey)
+		if parties == nil {
+			return errors.New("no parties bucket found")
+		}
+
+		partyKey := []byte(p.ID)
+
+		existingParty := parties.Bucket(partyKey)
+		if existingParty != nil {
+			return errors.New("party already exists")
+		}
+
+		newParty, err := parties.CreateBucket(partyKey)
+		if err != nil {
+			return errors.Wrap(err, "create party bucket")
+		}
+
+		err = newParty.Put(PartyBucketDataKey, partyBuf.Bytes())
+		if err != nil {
+			return errors.Wrap(err, "put party data")
+		}
+
+		_, err = newParty.CreateBucket(PartyBucketPinsBucketKey)
+		if err != nil {
+			return errors.Wrap(err, "create party-pins bucket")
+		}
+
+		return nil
+	})
 }
 
 func (ps *PinService) DeleteParty(h pinbase.Hash) error {

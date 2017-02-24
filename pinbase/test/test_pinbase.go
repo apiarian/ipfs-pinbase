@@ -14,6 +14,14 @@ func TestPinServiceHappyPath(t *testing.T, ps pinbase.PinService) {
 	if err != nil {
 		t.Errorf("did not create party: %+v", err)
 	}
+
+	parties, err := ps.Parties()
+	if err != nil {
+		t.Errorf("did not get parties; %+v", err)
+	}
+
+	t.Logf("parties: %+v", parties)
+	t.Error("bump")
 	/*
 		p, err := ps.Parties()
 		if err != nil {
