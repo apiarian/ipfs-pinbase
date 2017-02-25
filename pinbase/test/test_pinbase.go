@@ -174,10 +174,206 @@ func TestPinServiceHappyPath(t *testing.T, ps pinbase.PinService) {
 
 	party, err = ps.Party(pinbase.Hash("baz"))
 	if err != nil {
-		t.Errorf(" failed to try to get the party: %+v", err)
+		t.Errorf("failed to try to get the party: %+v", err)
 	}
 
 	if party != nil {
 		t.Errorf("somehow created a party while deleting it: %+v", party)
+	}
+
+	//
+	// now lets look at the pins
+	//
+
+	// nothing to see here yet
+	pins, err := ps.Pins(pinbase.Hash("foo"))
+	if err != nil {
+		t.Errorf("failed to try to get the pins: %+v", err)
+	}
+
+	if len(pins) != 0 {
+		t.Errorf("did not get zero pins: %+v", pins)
+	}
+
+	// create a pin
+	err = ps.CreatePin(pinbase.Hash("foo"), &pinbase.PinCreate{
+		ID:         pinbase.Hash("bar"),
+		Aliases:    []string{"really cool", "super rad"},
+		WantPinned: true,
+	})
+	if err != nil {
+		t.Errorf("did not create pin: %+v", err)
+	}
+
+	// list the pins
+	pins, err = ps.Pins(pinbase.Hash("foo"))
+	if err != nil {
+		t.Errorf("did not get pins: %+v", err)
+	}
+
+	if len(pins) != 1 {
+		t.Errorf("did not get one pin: %+v", pins)
+	}
+
+	if pin := pins[0]; !reflect.DeepEqual(
+		pin,
+		&pinbase.PinView{
+			ID:         pinbase.Hash("bar"),
+			Aliases:    []string{"really cool", "super rad"},
+			WantPinned: true,
+			Status:     pinbase.PinPending,
+			LastError:  nil,
+		},
+	) {
+		t.Errorf("did not get the pin we expected: %+v", pin)
+	}
+
+	// add another pin
+	err = ps.CreatePin(pinbase.Hash("foo"), &pinbase.PinCreate{
+		ID:         pinbase.Hash("abc"),
+		Aliases:    []string{"something"},
+		WantPinned: false,
+	})
+	if err != nil {
+		t.Errorf("did not create pin: %+v", err)
+	}
+
+	pins, err = ps.Pins(pinbase.Hash("foo"))
+	if err != nil {
+		t.Errorf("did not get the pins: %+v", err)
+	}
+
+	if len(pins) != 2 {
+		t.Errorf("did not get two pins: %+v", pins)
+	}
+
+	pinsByKey := make(map[pinbase.Hash]*pinbase.PinView)
+	for _, p := range pins {
+		pinsByKey[p.ID] = p
+	}
+
+	if !reflect.DeepEqual(
+		pinsByKey,
+		map[pinbase.Hash]*pinbase.PinView{
+			pinbase.Hash("bar"): &pinbase.PinView{
+				ID:         pinbase.Hash("bar"),
+				Aliases:    []string{"really cool", "super rad"},
+				WantPinned: true,
+				Status:     pinbase.PinPending,
+				LastError:  nil,
+			},
+			pinbase.Hash("abc"): &pinbase.PinView{
+				ID:         pinbase.Hash("abc"),
+				Aliases:    []string{"something"},
+				WantPinned: false,
+				Status:     pinbase.PinPending,
+				LastError:  nil,
+			},
+		},
+	) {
+		t.Errorf("did not get the pins we wanted: %+v", pins)
+	}
+
+	// get an existing pin
+	pin, err := ps.Pin(pinbase.Hash("foo"), pinbase.Hash("bar"))
+	if err != nil {
+		t.Errorf("did not get pin: %+v", err)
+	}
+
+	if !reflect.DeepEqual(
+		pin,
+		&pinbase.PinView{
+			ID:         pinbase.Hash("bar"),
+			Aliases:    []string{"really cool", "super rad"},
+			WantPinned: true,
+			Status:     pinbase.PinPending,
+			LastError:  nil,
+		},
+	) {
+		t.Errorf("did ont get the expected pin: %+v", err)
+	}
+
+	// try to get an nonexistent pin
+	pin, err = ps.Pin(pinbase.Hash("foo"), pinbase.Hash("baz"))
+	if err != nil {
+		t.Errorf("failed to try to get the pin: %+v", err)
+	}
+
+	if pin != nil {
+		t.Errorf("got a nonexistent pin: %+v", pin)
+	}
+
+	// update a pin
+	err = ps.UpdatePin(
+		pinbase.Hash("foo"),
+		pinbase.Hash("bar"),
+		&pinbase.PinEdit{
+			Aliases:    []string{"really rad"},
+			WantPinned: false,
+		},
+	)
+	if err != nil {
+		t.Errorf("did not update the pin: %+v", err)
+	}
+
+	pin, err = ps.Pin(pinbase.Hash("foo"), pinbase.Hash("bar"))
+	if err != nil {
+		t.Errorf("did not get the pin: %+v", err)
+	}
+
+	if !reflect.DeepEqual(
+		pin,
+		&pinbase.PinView{
+			ID:         pinbase.Hash("bar"),
+			Aliases:    []string{"really rad"},
+			WantPinned: false,
+			Status:     pinbase.PinPending,
+			LastError:  nil,
+		},
+	) {
+		t.Errorf("pin was not updated correctly: %+v", pin)
+	}
+
+	// delete a pin
+	err = ps.DeletePin(pinbase.Hash("foo"), pinbase.Hash("abc"))
+	if err != nil {
+		t.Errorf("did not delete the pin: %+v", err)
+
+		pin, err = ps.Pin(pinbase.Hash("foo"), pinbase.Hash("abc"))
+		if err != nil {
+			t.Errorf("failed to try to get the pin: %+v", err)
+		}
+
+		if pin != nil {
+			t.Errorf("got a deleted pin: %+v", pin)
+		}
+
+		pins, err = ps.Pins(pinbase.Hash("foo"))
+		if err != nil {
+			t.Errorf("failed to get the pins: %+v", err)
+		}
+
+		if len(pins) != 1 {
+			t.Errorf("we don't have exactly one pin again: %+v", pins)
+		}
+
+		if pin := pins[0]; pin.ID != pinbase.Hash("bar") {
+			t.Errorf("we don't still have the expected pin: %+v", pin)
+		}
+
+		// delte a nonexistent pin
+		err = ps.DeletePin(pinbase.Hash("foo"), pinbase.Hash("baz"))
+		if err != nil {
+			t.Errorf("failed to delete nonexistent pin: %+v", err)
+		}
+
+		pin, err := ps.Pin(pinbase.Hash("foo"), pinbase.Hash("baz"))
+		if err != nil {
+			t.Errorf("failed to try to get the pin: %+v", err)
+		}
+
+		if pin != nil {
+			t.Errorf("somehow created a pin while deleting it: %+v", pin)
+		}
 	}
 }

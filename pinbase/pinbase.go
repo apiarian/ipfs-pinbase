@@ -56,6 +56,23 @@ const (
 	numPinStatuses
 )
 
+func (p PinStatus) String() string {
+	switch p {
+	case PinPending:
+		return "pending"
+	case PinPinned:
+		return "pinned"
+	case PinUnpinned:
+		return "unpinned"
+	case PinError:
+		return "error"
+	case PinFatal:
+		return "fatal"
+	default:
+		return "unknown"
+	}
+}
+
 type PinService interface {
 	Parties() ([]*PartyView, error)
 	Party(Hash) (*PartyView, error)
@@ -69,7 +86,7 @@ type PinService interface {
 
 	CreatePin(partyID Hash, pc *PinCreate) error
 	DeletePin(partyID, pinID Hash) error
-	UpdatePin(partyID Hash, pe *PinEdit) error
+	UpdatePin(partyID, pinID Hash, pe *PinEdit) error
 }
 
 type PinBackend interface {

@@ -3,6 +3,7 @@ package bolt
 import (
 	"bytes"
 	"encoding/gob"
+	cerrors "errors"
 	"time"
 
 	"github.com/apiarian/ipfs-pinbase/pinbase"
@@ -114,7 +115,7 @@ func writePartyStorage(party *bolt.Bucket, p *partyStorage) error {
 
 	err := enc.Encode(p)
 	if err != nil {
-		return errors.Wrap(err, "failed to encode party data")
+		return errors.Wrap(err, "encode party data")
 	}
 
 	err = party.Put(PartyBucketDataKey, b.Bytes())
@@ -278,24 +279,213 @@ func (ps *PinService) UpdateParty(h pinbase.Hash, p *pinbase.PartyEdit) error {
 	})
 }
 
+func getPinsBucket(tx *bolt.Tx, h pinbase.Hash) (*bolt.Bucket, error) {
+	parties, err := getPartiesBucket(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	party := parties.Bucket([]byte(h))
+	if party == nil {
+		return nil, errors.New("could not find party")
+	}
+
+	pins := party.Bucket(PartyBucketPinsBucketKey)
+	if pins == nil {
+		return nil, errors.New("did not get a pins bucket")
+	}
+
+	return pins, nil
+}
+
+type pinStorage struct {
+	Aliases          []string
+	WantPinned       bool
+	Status           pinbase.PinStatus
+	LastErrorMessage string
+}
+
+func extractPinStorage(data []byte) (*pinStorage, error) {
+	var p pinStorage
+	err := gob.NewDecoder(bytes.NewBuffer(data)).Decode(&p)
+	if err != nil {
+		return nil, errors.Wrap(err, "decode pin data")
+	}
+
+	return &p, nil
+}
+
+func writePinStorage(pins *bolt.Bucket, h pinbase.Hash, p *pinStorage) error {
+	var b bytes.Buffer
+	enc := gob.NewEncoder(&b)
+
+	err := enc.Encode(p)
+	if err != nil {
+		return errors.Wrap(err, "encode pin data")
+	}
+
+	err = pins.Put([]byte(h), b.Bytes())
+	if err != nil {
+		return errors.Wrap(err, "put pin data")
+	}
+
+	return nil
+}
+
 func (ps *PinService) Pins(partyID pinbase.Hash) ([]*pinbase.PinView, error) {
-	return nil, errors.New("not implemented")
+	var list []*pinbase.PinView
+
+	err := ps.db.View(func(tx *bolt.Tx) error {
+		pins, err := getPinsBucket(tx, partyID)
+		if err != nil {
+			return err
+		}
+
+		c := pins.Cursor()
+
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			if v == nil {
+				return errors.New("found a bucket pin")
+			}
+
+			ps, err := extractPinStorage(v)
+			if err != nil {
+				return err
+			}
+
+			pv := &pinbase.PinView{
+				ID:         pinbase.Hash(k),
+				Aliases:    ps.Aliases,
+				WantPinned: ps.WantPinned,
+				Status:     ps.Status,
+				LastError:  nil,
+			}
+
+			if ps.LastErrorMessage != "" {
+				pv.LastError = cerrors.New(ps.LastErrorMessage)
+			}
+
+			list = append(list, pv)
+		}
+
+		return nil
+	})
+
+	return list, err
 }
 
 func (ps *PinService) Pin(partyID, pinID pinbase.Hash) (*pinbase.PinView, error) {
-	return nil, errors.New("not implemented")
+	var p *pinbase.PinView
+
+	err := ps.db.View(func(tx *bolt.Tx) error {
+		pins, err := getPinsBucket(tx, partyID)
+		if err != nil {
+			return err
+		}
+
+		pin := pins.Get([]byte(pinID))
+		if pin == nil {
+			// no pin is not an error, just a nil pin
+			return nil
+		}
+
+		ps, err := extractPinStorage(pin)
+		if err != nil {
+			return err
+		}
+
+		p = &pinbase.PinView{
+			ID:         pinID,
+			Aliases:    ps.Aliases,
+			WantPinned: ps.WantPinned,
+			Status:     ps.Status,
+			LastError:  nil,
+		}
+
+		if ps.LastErrorMessage != "" {
+			p.LastError = cerrors.New(ps.LastErrorMessage)
+		}
+
+		return nil
+	})
+
+	return p, err
 }
 
 func (ps *PinService) CreatePin(partyID pinbase.Hash, pc *pinbase.PinCreate) error {
+	return ps.db.Update(func(tx *bolt.Tx) error {
+		pins, err := getPinsBucket(tx, partyID)
+		if err != nil {
+			return err
+		}
+
+		pinKey := []byte(pc.ID)
+
+		existingPin := pins.Get(pinKey)
+		if existingPin != nil {
+			return errors.New("pin already exists")
+		}
+
+		return writePinStorage(
+			pins,
+			pc.ID,
+			&pinStorage{
+				Aliases:          pc.Aliases,
+				WantPinned:       pc.WantPinned,
+				Status:           pinbase.PinPending,
+				LastErrorMessage: "",
+			},
+		)
+	})
 	return errors.New("not implemented")
 }
 
 func (ps *PinService) DeletePin(partyID, pinID pinbase.Hash) error {
-	return errors.New("not implemented")
+	return ps.db.Update(func(tx *bolt.Tx) error {
+		pins, err := getPinsBucket(tx, partyID)
+		if err != nil {
+			return err
+		}
+
+		pinKey := []byte(pinID)
+
+		pin := pins.Get(pinKey)
+		if pin == nil {
+			// deleting something that does not exist is not an error
+			return nil
+		}
+
+		return errors.Wrap(
+			pins.Delete(pinKey),
+			"delete pin data",
+		)
+	})
 }
 
-func (ps *PinService) UpdatePin(partyID pinbase.Hash, pe *pinbase.PinEdit) error {
-	return errors.New("not implemented")
+func (ps *PinService) UpdatePin(partyID, pinID pinbase.Hash, pe *pinbase.PinEdit) error {
+	return ps.db.Update(func(tx *bolt.Tx) error {
+		pins, err := getPinsBucket(tx, partyID)
+		if err != nil {
+			return err
+		}
+
+		pin := pins.Get([]byte(pinID))
+		if pin == nil {
+			return errors.New("could not find pin")
+		}
+
+		ps, err := extractPinStorage(pin)
+		if err != nil {
+			return err
+		}
+
+		ps.Aliases = pe.Aliases
+		ps.WantPinned = pe.WantPinned
+		ps.Status = pinbase.PinPending
+		ps.LastErrorMessage = ""
+
+		return writePinStorage(pins, pinID, ps)
+	})
 }
 
 //
