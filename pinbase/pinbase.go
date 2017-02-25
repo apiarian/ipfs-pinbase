@@ -22,6 +22,10 @@ type PartyView struct {
 	Description string
 }
 
+func (pv *PartyView) String() string {
+	return string(pv.ID) + ": " + pv.Description
+}
+
 type PinCreate struct {
 	ID         Hash
 	Aliases    []string
@@ -58,7 +62,7 @@ type PinService interface {
 
 	CreateParty(*PartyCreate) error
 	DeleteParty(Hash) error
-	UpdateParty(*PartyEdit) error
+	UpdateParty(Hash, *PartyEdit) error
 
 	Pins(partyID Hash) ([]*PinView, error)
 	Pin(partyID, pinID Hash) (*PinView, error)
