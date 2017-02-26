@@ -8,7 +8,7 @@ import (
 	"github.com/apiarian/ipfs-pinbase/pinbase/test"
 )
 
-func TestClient(t *testing.T) {
+func TestClientService(t *testing.T) {
 	filename := tempfilename(t)
 	defer os.Remove(filename)
 
@@ -21,6 +21,22 @@ func TestClient(t *testing.T) {
 	ps := c.PinService()
 
 	test.TestPinServiceHappyPath(t, ps)
+}
+
+func TestClientBackend(t *testing.T) {
+	filename := tempfilename(t)
+	defer os.Remove(filename)
+
+	c := NewClient(filename)
+	err := c.Open()
+	if err != nil {
+		t.Fatalf("failed to open client: %+v", err)
+	}
+
+	ps := c.PinService()
+	pb := c.PinBackend()
+
+	test.TestPinBackendHappyPath(t, pb, ps)
 }
 
 func tempfilename(t *testing.T) string {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	cerrors "errors"
+	"log"
 	"time"
 
 	"github.com/apiarian/ipfs-pinbase/pinbase"
@@ -15,16 +16,19 @@ var (
 	PartiesBucketKey         = []byte("PARTIES")
 	PartyBucketDataKey       = []byte("DATA")
 	PartyBucketPinsBucketKey = []byte("PINS")
+	PinArchiveBucketKey      = []byte("PIN-ARCHIVE")
 )
 
 type Client struct {
 	path string
 	db   *bolt.DB
+	bump chan struct{}
 }
 
 func NewClient(path string) *Client {
 	return &Client{
 		path: path,
+		bump: make(chan struct{}),
 	}
 }
 
@@ -64,17 +68,31 @@ func setupSchema(tx *bolt.Tx) error {
 		return errors.Wrap(err, "create parties bucket")
 	}
 
+	_, err = tx.CreateBucketIfNotExists(PinArchiveBucketKey)
+	if err != nil {
+		return errors.Wrap(err, "create pin archive bucket")
+	}
+
 	return nil
 }
 
 func (c *Client) PinService() pinbase.PinService {
 	return &PinService{
-		db: c.db,
+		db:   c.db,
+		bump: c.bump,
+	}
+}
+
+func (c *Client) PinBackend() pinbase.PinBackend {
+	return &PinService{
+		db:   c.db,
+		bump: c.bump,
 	}
 }
 
 type PinService struct {
-	db *bolt.DB
+	db   *bolt.DB
+	bump chan struct{}
 }
 
 //
@@ -125,6 +143,17 @@ func writePartyStorage(party *bolt.Bucket, p *partyStorage) error {
 
 	return nil
 }
+
+func getArchiveBucket(tx *bolt.Tx) (*bolt.Bucket, error) {
+	a := tx.Bucket(PinArchiveBucketKey)
+	if a == nil {
+		return nil, errors.New("no archive bucket found")
+	}
+
+	return a, nil
+}
+
+var sentinel = []byte("x")
 
 func (ps *PinService) Parties() ([]*pinbase.PartyView, error) {
 	var list []*pinbase.PartyView
@@ -235,7 +264,9 @@ func (ps *PinService) CreateParty(p *pinbase.PartyCreate) error {
 }
 
 func (ps *PinService) DeleteParty(h pinbase.Hash) error {
-	return ps.db.Update(func(tx *bolt.Tx) error {
+	var pinsDeleted bool
+
+	err := ps.db.Update(func(tx *bolt.Tx) error {
 		parties, err := getPartiesBucket(tx)
 		if err != nil {
 			return err
@@ -249,11 +280,49 @@ func (ps *PinService) DeleteParty(h pinbase.Hash) error {
 			return nil
 		}
 
-		return errors.Wrap(
-			parties.DeleteBucket(partyKey),
-			"delete party bucket",
-		)
+		pins := party.Bucket(PartyBucketPinsBucketKey)
+		if pins == nil {
+			return errors.New("did not get a pins bucket")
+		}
+
+		oldPins := make(map[pinbase.Hash]struct{})
+
+		c := pins.Cursor()
+		for k, _ := c.First(); k != nil; k, _ = c.Next() {
+			oldPins[pinbase.Hash(k)] = struct{}{}
+		}
+
+		err = parties.DeleteBucket(partyKey)
+		if err != nil {
+			return errors.Wrap(err, "delete party bucket")
+		}
+
+		archive, err := getArchiveBucket(tx)
+		if err != nil {
+			return err
+		}
+
+		for h, _ := range oldPins {
+			err := archive.Put([]byte(h), sentinel)
+			if err != nil {
+				return errors.Wrapf(err, "archive pin %s", h)
+			}
+		}
+
+		pinsDeleted = len(oldPins) > 0
+
+		return nil
 	})
+
+	if err != nil {
+		return err
+	}
+
+	if pinsDeleted {
+		go func(c chan<- struct{}) { c <- struct{}{} }(ps.bump)
+	}
+
+	return nil
 }
 
 func (ps *PinService) UpdateParty(h pinbase.Hash, p *pinbase.PartyEdit) error {
@@ -413,7 +482,7 @@ func (ps *PinService) Pin(partyID, pinID pinbase.Hash) (*pinbase.PinView, error)
 }
 
 func (ps *PinService) CreatePin(partyID pinbase.Hash, pc *pinbase.PinCreate) error {
-	return ps.db.Update(func(tx *bolt.Tx) error {
+	err := ps.db.Update(func(tx *bolt.Tx) error {
 		pins, err := getPinsBucket(tx, partyID)
 		if err != nil {
 			return err
@@ -437,11 +506,17 @@ func (ps *PinService) CreatePin(partyID pinbase.Hash, pc *pinbase.PinCreate) err
 			},
 		)
 	})
-	return errors.New("not implemented")
+	if err != nil {
+		return err
+	}
+
+	go func(c chan<- struct{}) { c <- struct{}{} }(ps.bump)
+
+	return nil
 }
 
 func (ps *PinService) DeletePin(partyID, pinID pinbase.Hash) error {
-	return ps.db.Update(func(tx *bolt.Tx) error {
+	err := ps.db.Update(func(tx *bolt.Tx) error {
 		pins, err := getPinsBucket(tx, partyID)
 		if err != nil {
 			return err
@@ -455,15 +530,32 @@ func (ps *PinService) DeletePin(partyID, pinID pinbase.Hash) error {
 			return nil
 		}
 
-		return errors.Wrap(
-			pins.Delete(pinKey),
-			"delete pin data",
-		)
+		err = pins.Delete(pinKey)
+		if err != nil {
+			return errors.Wrap(err, "delete pin data")
+		}
+
+		archive, err := getArchiveBucket(tx)
+		if err != nil {
+			return err
+		}
+
+		return errors.Wrap(archive.Put(pinKey, sentinel), "archive the pin")
 	})
+
+	if err != nil {
+		return err
+	}
+
+	go func(c chan<- struct{}) { c <- struct{}{} }(ps.bump)
+
+	return nil
 }
 
 func (ps *PinService) UpdatePin(partyID, pinID pinbase.Hash, pe *pinbase.PinEdit) error {
-	return ps.db.Update(func(tx *bolt.Tx) error {
+	var wantChanged bool
+
+	err := ps.db.Update(func(tx *bolt.Tx) error {
 		pins, err := getPinsBucket(tx, partyID)
 		if err != nil {
 			return err
@@ -479,6 +571,10 @@ func (ps *PinService) UpdatePin(partyID, pinID pinbase.Hash, pe *pinbase.PinEdit
 			return err
 		}
 
+		if ps.WantPinned != pe.WantPinned {
+			wantChanged = true
+		}
+
 		ps.Aliases = pe.Aliases
 		ps.WantPinned = pe.WantPinned
 		ps.Status = pinbase.PinPending
@@ -486,6 +582,16 @@ func (ps *PinService) UpdatePin(partyID, pinID pinbase.Hash, pe *pinbase.PinEdit
 
 		return writePinStorage(pins, pinID, ps)
 	})
+
+	if err != nil {
+		return err
+	}
+
+	if wantChanged {
+		go func(c chan<- struct{}) { c <- struct{}{} }(ps.bump)
+	}
+
+	return nil
 }
 
 //
@@ -493,11 +599,79 @@ func (ps *PinService) UpdatePin(partyID, pinID pinbase.Hash, pe *pinbase.PinEdit
 //
 
 func (ps *PinService) PinProcessorBump() <-chan struct{} {
-	return make(chan struct{})
+	return ps.bump
 }
 
 func (ps *PinService) PinRequirements() map[pinbase.Hash]bool {
-	return make(map[pinbase.Hash]bool)
+	m := make(map[pinbase.Hash]bool)
+
+	err := ps.db.View(func(tx *bolt.Tx) error {
+		parties, err := getPartiesBucket(tx)
+		if err != nil {
+			return err
+		}
+
+		archive, err := getArchiveBucket(tx)
+		if err != nil {
+			return err
+		}
+
+		partiesC := parties.Cursor()
+
+		for partyK, partyV := partiesC.First(); partyK != nil; partyK, partyV = partiesC.Next() {
+			if partyV != nil {
+				log.Printf("non-bucket party found at %s", partyK)
+				continue
+			}
+
+			party := parties.Bucket(partyK)
+			if party == nil {
+				log.Printf("did not get bucket for party %s", partyK)
+				continue
+			}
+
+			pins := party.Bucket(PartyBucketPinsBucketKey)
+			if pins == nil {
+				log.Printf("did not get pins bucket for party %s", partyK)
+			}
+
+			pinsC := pins.Cursor()
+
+			for pinK, pinV := pinsC.First(); pinK != nil; pinK, pinV = pinsC.Next() {
+				pinHash := pinbase.Hash(pinK)
+
+				if m[pinHash] {
+					// if the pin is already marked, no need to extract its data
+					continue
+				}
+
+				ps, err := extractPinStorage(pinV)
+				if err != nil {
+					log.Printf("failed to extract data for pin %s under party %s", pinK, partyK)
+					continue
+				}
+
+				m[pinHash] = ps.WantPinned
+			}
+		}
+
+		archiveC := archive.Cursor()
+
+		for pinK, _ := archiveC.First(); pinK != nil; pinK, _ = archiveC.Next() {
+			pinHash := pinbase.Hash(pinK)
+
+			if _, exists := m[pinHash]; !exists {
+				m[pinHash] = false
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		log.Printf("error in bolt transaction: %s", err)
+	}
+
+	return m
 }
 
 func (ps *PinService) NotifyPin(pinID pinbase.Hash, s *pinbase.PinBackendState) {

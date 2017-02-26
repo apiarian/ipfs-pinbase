@@ -3,6 +3,7 @@ package test
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/apiarian/ipfs-pinbase/pinbase"
 )
@@ -375,5 +376,203 @@ func TestPinServiceHappyPath(t *testing.T, ps pinbase.PinService) {
 		if pin != nil {
 			t.Errorf("somehow created a pin while deleting it: %+v", pin)
 		}
+	}
+}
+
+func checkBump(t *testing.T, tag string, expect bool, c <-chan struct{}) {
+	select {
+	case <-c:
+		if expect {
+			break
+		} else {
+			t.Errorf("%s: got an unexpected bump", tag)
+		}
+
+	case <-time.After(25 * time.Microsecond):
+		if expect {
+			t.Errorf("%s: did not get the expected bump", tag)
+		} else {
+			break
+		}
+	}
+}
+
+func TestPinBackendHappyPath(t *testing.T, pb pinbase.PinBackend, ps pinbase.PinService) {
+	reqs := pb.PinRequirements()
+	if len(reqs) != 0 {
+		t.Errorf("requiremens did not start out empty: %+v", reqs)
+	}
+
+	err := ps.CreateParty(&pinbase.PartyCreate{
+		ID:          pinbase.Hash("foo"),
+		Description: "hello",
+	})
+	if err != nil {
+		t.Errorf("failed to create party: %+v", err)
+	}
+
+	reqs = pb.PinRequirements()
+	if len(reqs) != 0 {
+		t.Errorf("requirements not empty: %+v", reqs)
+	}
+
+	checkBump(t, "before pins", false, pb.PinProcessorBump())
+
+	err = ps.CreatePin(
+		pinbase.Hash("foo"),
+		&pinbase.PinCreate{
+			ID:         pinbase.Hash("bar"),
+			Aliases:    []string{"something"},
+			WantPinned: true,
+		},
+	)
+	if err != nil {
+		t.Errorf("failed to create pin: %+v", err)
+	}
+
+	checkBump(t, "pin created", true, pb.PinProcessorBump())
+
+	reqs = pb.PinRequirements()
+	if !reflect.DeepEqual(
+		reqs,
+		map[pinbase.Hash]bool{
+			pinbase.Hash("bar"): true,
+		},
+	) {
+		t.Errorf("got the wrong requirements: %+v", reqs)
+	}
+
+	err = ps.UpdatePin(
+		pinbase.Hash("foo"),
+		pinbase.Hash("bar"),
+		&pinbase.PinEdit{
+			Aliases:    []string{"something", "something else"},
+			WantPinned: true,
+		},
+	)
+	if err != nil {
+		t.Errorf("failed to update pin: %+v", err)
+	}
+
+	checkBump(t, "pin aliases updated", false, pb.PinProcessorBump())
+
+	reqs = pb.PinRequirements()
+	if !reflect.DeepEqual(
+		reqs,
+		map[pinbase.Hash]bool{
+			pinbase.Hash("bar"): true,
+		},
+	) {
+		t.Errorf("pin requirements changed unexpectedly: %+v", reqs)
+	}
+
+	err = ps.UpdatePin(
+		pinbase.Hash("foo"),
+		pinbase.Hash("bar"),
+		&pinbase.PinEdit{
+			Aliases:    []string{"something"},
+			WantPinned: false,
+		},
+	)
+	if err != nil {
+		t.Errorf("failed to update poin: %+v", err)
+	}
+
+	checkBump(t, "pin want updated", true, pb.PinProcessorBump())
+
+	reqs = pb.PinRequirements()
+	if !reflect.DeepEqual(
+		reqs,
+		map[pinbase.Hash]bool{
+			pinbase.Hash("bar"): false,
+		},
+	) {
+		t.Errorf("pin requirements are wrong: %+v", reqs)
+	}
+
+	err = ps.CreatePin(
+		pinbase.Hash("foo"),
+		&pinbase.PinCreate{
+			ID:         pinbase.Hash("baz"),
+			Aliases:    []string{"doomed"},
+			WantPinned: true,
+		},
+	)
+	if err != nil {
+		t.Errorf("failed to create pin: %+v", err)
+	}
+
+	checkBump(t, "doomed pin created", true, pb.PinProcessorBump())
+
+	reqs = pb.PinRequirements()
+	if !reflect.DeepEqual(
+		reqs,
+		map[pinbase.Hash]bool{
+			pinbase.Hash("bar"): false,
+			pinbase.Hash("baz"): true,
+		},
+	) {
+		t.Errorf("pin requirements are wrong: %+v", reqs)
+	}
+
+	err = ps.DeletePin(pinbase.Hash("foo"), pinbase.Hash("baz"))
+	if err != nil {
+		t.Errorf("failed to delete pin: %+v", err)
+	}
+
+	checkBump(t, "pin deleted", true, pb.PinProcessorBump())
+
+	reqs = pb.PinRequirements()
+	if !reflect.DeepEqual(
+		reqs,
+		map[pinbase.Hash]bool{
+			pinbase.Hash("bar"): false,
+			pinbase.Hash("baz"): false,
+		},
+	) {
+		t.Errorf("pin requirements are wrong: %+v", reqs)
+	}
+
+	err = ps.UpdatePin(
+		pinbase.Hash("foo"),
+		pinbase.Hash("bar"),
+		&pinbase.PinEdit{
+			Aliases:    []string{"everything is about to end"},
+			WantPinned: true,
+		},
+	)
+	if err != nil {
+		t.Errorf("failed to update pin: %+v", err)
+	}
+
+	checkBump(t, "pin updated again", true, pb.PinProcessorBump())
+
+	reqs = pb.PinRequirements()
+	if !reflect.DeepEqual(
+		reqs,
+		map[pinbase.Hash]bool{
+			pinbase.Hash("bar"): true,
+			pinbase.Hash("baz"): false,
+		},
+	) {
+		t.Errorf("pin requirements are wrong: %+v", reqs)
+	}
+
+	err = ps.DeleteParty(pinbase.Hash("foo"))
+	if err != nil {
+		t.Errorf("failed to delete party: %+v", err)
+	}
+
+	checkBump(t, "party deleted", true, pb.PinProcessorBump())
+
+	reqs = pb.PinRequirements()
+	if !reflect.DeepEqual(
+		reqs,
+		map[pinbase.Hash]bool{
+			pinbase.Hash("bar"): false,
+			pinbase.Hash("baz"): false,
+		},
+	) {
+		t.Errorf("pin requirements are wrong: %+v", reqs)
 	}
 }
