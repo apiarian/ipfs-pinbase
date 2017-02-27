@@ -50,7 +50,7 @@ func TestMain(m *testing.M) {
 	}
 	defer iptbutil.IpfsKillAll(nodes)
 
-	err = iptbutil.IpfsStart(nodes, true)
+	err = iptbutil.IpfsStart(nodes, true, []string{})
 	if err != nil {
 		for i, n := range nodes {
 			killerr := n.Kill()
