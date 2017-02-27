@@ -1,11 +1,13 @@
 package test
 
 import (
+	cerrors "errors"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/apiarian/ipfs-pinbase/pinbase"
+	"github.com/pkg/errors"
 )
 
 func TestPinServiceHappyPath(t *testing.T, ps pinbase.PinService) {
@@ -575,4 +577,168 @@ func TestPinBackendHappyPath(t *testing.T, pb pinbase.PinBackend, ps pinbase.Pin
 	) {
 		t.Errorf("pin requirements are wrong: %+v", reqs)
 	}
+}
+
+func checkPinViews(t *testing.T, tag string, ps pinbase.PinService, expected map[pinbase.Hash]map[pinbase.Hash]*pinbase.PinView) {
+	got := make(map[pinbase.Hash]map[pinbase.Hash]*pinbase.PinView)
+
+	parties, err := ps.Parties()
+	if err != nil {
+		t.Errorf("%s: failed to get parties: %+v", tag, err)
+	}
+
+	for _, party := range parties {
+		gotParty := make(map[pinbase.Hash]*pinbase.PinView)
+
+		pins, err := ps.Pins(party.ID)
+		if err != nil {
+			t.Errorf("%s: failed to get pins for party %s: %+v", tag, party.ID, err)
+		}
+
+		for _, pin := range pins {
+			gotParty[pin.ID] = pin
+		}
+
+		got[party.ID] = gotParty
+	}
+
+	if !reflect.DeepEqual(expected, got) {
+		t.Errorf("%s:\ngot\n%+v,\nexpected\n%+v", tag, got, expected)
+	}
+}
+
+func TestPinFeedbackHappyPath(t *testing.T, pb pinbase.PinBackend, ps pinbase.PinService) {
+	err := ps.CreateParty(&pinbase.PartyCreate{
+		ID:          pinbase.Hash("party1"),
+		Description: "hello",
+	})
+	if err != nil {
+		t.Errorf("failed to create party 1: %+v", err)
+	}
+
+	err = ps.CreateParty(&pinbase.PartyCreate{
+		ID:          pinbase.Hash("party2"),
+		Description: "world",
+	})
+	if err != nil {
+		t.Errorf("failed to create party 2: %+v", err)
+	}
+
+	err = ps.CreatePin(
+		pinbase.Hash("party1"),
+		&pinbase.PinCreate{
+			ID:         pinbase.Hash("pin1"),
+			Aliases:    []string{"something"},
+			WantPinned: true,
+		},
+	)
+	if err != nil {
+		t.Errorf("failed to create pin for party 1: %+v", err)
+	}
+
+	err = ps.CreatePin(
+		pinbase.Hash("party2"),
+		&pinbase.PinCreate{
+			ID:         pinbase.Hash("pin1"),
+			Aliases:    []string{"yup, something"},
+			WantPinned: true,
+		},
+	)
+	if err != nil {
+		t.Errorf("failed to create pin for party 2: %+v", err)
+	}
+
+	err = ps.CreatePin(
+		pinbase.Hash("party1"),
+		&pinbase.PinCreate{
+			ID:         pinbase.Hash("pin2"),
+			Aliases:    []string{"something else"},
+			WantPinned: true,
+		},
+	)
+	if err != nil {
+		t.Errorf("failed to create pin for party 1: %+v", err)
+	}
+
+	checkPinViews(
+		t,
+		"no updates",
+		ps,
+		map[pinbase.Hash]map[pinbase.Hash]*pinbase.PinView{
+			pinbase.Hash("party1"): map[pinbase.Hash]*pinbase.PinView{
+				pinbase.Hash("pin1"): &pinbase.PinView{
+					ID:         pinbase.Hash("pin1"),
+					Aliases:    []string{"something"},
+					WantPinned: true,
+					Status:     pinbase.PinPending,
+					LastError:  nil,
+				},
+				pinbase.Hash("pin2"): &pinbase.PinView{
+					ID:         pinbase.Hash("pin2"),
+					Aliases:    []string{"something else"},
+					WantPinned: true,
+					Status:     pinbase.PinPending,
+					LastError:  nil,
+				},
+			},
+			pinbase.Hash("party2"): map[pinbase.Hash]*pinbase.PinView{
+				pinbase.Hash("pin1"): &pinbase.PinView{
+					ID:         pinbase.Hash("pin1"),
+					Aliases:    []string{"yup, something"},
+					WantPinned: true,
+					Status:     pinbase.PinPending,
+					LastError:  nil,
+				},
+			},
+		},
+	)
+
+	pb.NotifyPin(
+		pinbase.Hash("pin1"),
+		&pinbase.PinBackendState{
+			Status:    pinbase.PinError,
+			LastError: errors.New("ohz noz something went wrong"),
+		},
+	)
+
+	pb.NotifyPin(
+		pinbase.Hash("pin2"),
+		&pinbase.PinBackendState{
+			Status:    pinbase.PinPinned,
+			LastError: nil,
+		},
+	)
+
+	checkPinViews(
+		t,
+		"made some changes",
+		ps,
+		map[pinbase.Hash]map[pinbase.Hash]*pinbase.PinView{
+			pinbase.Hash("party1"): map[pinbase.Hash]*pinbase.PinView{
+				pinbase.Hash("pin1"): &pinbase.PinView{
+					ID:         pinbase.Hash("pin1"),
+					Aliases:    []string{"something"},
+					WantPinned: true,
+					Status:     pinbase.PinError,
+					LastError:  cerrors.New("ohz noz something went wrong"),
+				},
+				pinbase.Hash("pin2"): &pinbase.PinView{
+					ID:         pinbase.Hash("pin2"),
+					Aliases:    []string{"something else"},
+					WantPinned: true,
+					Status:     pinbase.PinPinned,
+					LastError:  nil,
+				},
+			},
+			pinbase.Hash("party2"): map[pinbase.Hash]*pinbase.PinView{
+				pinbase.Hash("pin1"): &pinbase.PinView{
+					ID:         pinbase.Hash("pin1"),
+					Aliases:    []string{"yup, something"},
+					WantPinned: true,
+					Status:     pinbase.PinError,
+					LastError:  cerrors.New("ohz noz something went wrong"),
+				},
+			},
+		},
+	)
 }

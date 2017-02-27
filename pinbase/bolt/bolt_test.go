@@ -39,6 +39,22 @@ func TestClientBackend(t *testing.T) {
 	test.TestPinBackendHappyPath(t, pb, ps)
 }
 
+func TestClientFeedback(t *testing.T) {
+	filename := tempfilename(t)
+	defer os.Remove(filename)
+
+	c := NewClient(filename)
+	err := c.Open()
+	if err != nil {
+		t.Fatalf("failed to open clien: %+v", err)
+	}
+
+	ps := c.PinService()
+	pb := c.PinBackend()
+
+	test.TestPinFeedbackHappyPath(t, pb, ps)
+}
+
 func tempfilename(t *testing.T) string {
 	f, err := ioutil.TempFile("", "pinbase-bolt-")
 	if err != nil {

@@ -633,6 +633,7 @@ func (ps *PinService) PinRequirements() map[pinbase.Hash]bool {
 			pins := party.Bucket(PartyBucketPinsBucketKey)
 			if pins == nil {
 				log.Printf("did not get pins bucket for party %s", partyK)
+				continue
 			}
 
 			pinsC := pins.Cursor()
@@ -675,6 +676,85 @@ func (ps *PinService) PinRequirements() map[pinbase.Hash]bool {
 }
 
 func (ps *PinService) NotifyPin(pinID pinbase.Hash, s *pinbase.PinBackendState) {
+	pinKey := []byte(pinID)
+
+	err := ps.db.Update(func(tx *bolt.Tx) error {
+		var partiesWithPin []pinbase.Hash
+
+		// first go through the parties to find the ones that need updating
+
+		parties, err := getPartiesBucket(tx)
+		if err != nil {
+			return err
+		}
+
+		partiesC := parties.Cursor()
+
+		for partyK, partyV := partiesC.First(); partyK != nil; partyK, partyV = partiesC.Next() {
+			if partyV != nil {
+				log.Printf("non-bucket party found at %s", partyK)
+				continue
+			}
+
+			party := parties.Bucket(partyK)
+			if party == nil {
+				log.Printf("did not get bucket for party %s", partyK)
+				continue
+			}
+
+			pins := party.Bucket(PartyBucketPinsBucketKey)
+			if pins == nil {
+				log.Printf("did not get pins bucket for party %s", partyK)
+				continue
+			}
+
+			pin := pins.Get(pinKey)
+			if pin != nil {
+				partiesWithPin = append(partiesWithPin, pinbase.Hash(partyK))
+			}
+		}
+
+		// now update the pins in the parties that need updating
+
+		for _, partyID := range partiesWithPin {
+			pins, err := getPinsBucket(tx, partyID)
+			if err != nil {
+				log.Printf("did not get pins for party %s", partyID)
+				continue
+			}
+
+			pin := pins.Get(pinKey)
+			if pin == nil {
+				log.Printf("most suprisingly did not find pin %s for party %s", pinID, partyID)
+				continue
+			}
+
+			ps, err := extractPinStorage(pin)
+			if err != nil {
+				log.Printf("failed to extract pin %s for party %s: %s", pinID, partyID, err)
+				continue
+			}
+
+			ps.Status = s.Status
+			if s.LastError == nil {
+				ps.LastErrorMessage = ""
+			} else {
+				ps.LastErrorMessage = s.LastError.Error()
+			}
+
+			err = writePinStorage(pins, pinID, ps)
+			if err != nil {
+				log.Printf("failed to store pin %s for party %s: %s", pinID, partyID, err)
+				continue
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		log.Printf("error in bolt transaction: %s", err)
+	}
 }
 
 var _ pinbase.PinService = &PinService{}

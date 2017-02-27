@@ -1,6 +1,7 @@
 package pinbase
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -43,6 +44,17 @@ type PinView struct {
 	WantPinned bool
 	Status     PinStatus
 	LastError  error
+}
+
+func (pv *PinView) String() string {
+	return fmt.Sprintf(
+		"%s: %s want(%t) %s %v",
+		pv.ID,
+		pv.Aliases,
+		pv.WantPinned,
+		pv.Status,
+		pv.LastError,
+	)
 }
 
 type PinStatus int
