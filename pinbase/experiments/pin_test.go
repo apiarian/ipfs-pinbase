@@ -186,3 +186,47 @@ func TestPinningMultipleLevels(t *testing.T) {
 		map[string]shell.PinInfo{},
 	)
 }
+
+func TestPinningRemoteThings(t *testing.T) {
+	s0, err := newShellForNode(0)
+	if err != nil {
+		t.Fatalf("failed to create shell 0: %+v", err)
+	}
+
+	s1, err := newShellForNode(1)
+	if err != nil {
+		t.Fatalf("failed to create shell 1: %+v", err)
+	}
+
+	hObj, err := s0.Add(bytes.NewBufferString("this is a test of remote things"))
+	if err != nil {
+		t.Errorf("failed to create a thing on node 0: %+v", err)
+	}
+
+	pins, err := s1.Pins()
+	if err != nil {
+		t.Errorf("did not get pins: %+v", err)
+	}
+
+	_, pinned := pins[hObj]
+	if pinned {
+		t.Errorf("apparently the remote thing is already pinned")
+	}
+
+	err = s1.Pin(hObj)
+	if err != nil {
+		t.Errorf("failed to pin the remote thing: %+v", err)
+	}
+
+	time.Sleep(100 * time.Millisecond)
+
+	pins, err = s1.Pins()
+	if err != nil {
+		t.Errorf("failed to get pins again: %+v", err)
+	}
+
+	_, pinned = pins[hObj]
+	if !pinned {
+		t.Errorf("apparently failed to actually pin the thing: %+v", err)
+	}
+}
