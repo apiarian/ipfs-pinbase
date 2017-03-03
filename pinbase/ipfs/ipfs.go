@@ -1,8 +1,8 @@
 package ipfs
 
 import (
-	"github.com/apiarian/go-ipfs-api"
-	"github.com/apiarian/ipfs-pinbase/pinbase"
+	"github.com/ipfs/go-ipfs-api"
+	"github.com/ipfs/ipfs-pinbase/pinbase"
 	"github.com/pkg/errors"
 )
 

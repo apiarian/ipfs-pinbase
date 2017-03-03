@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apiarian/go-ipfs-api"
+	"github.com/ipfs/go-ipfs-api"
 	"github.com/pkg/errors"
 	"github.com/whyrusleeping/iptb/util"
 )

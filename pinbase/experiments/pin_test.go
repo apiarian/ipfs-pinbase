@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apiarian/go-ipfs-api"
+	"github.com/ipfs/go-ipfs-api"
 )
 
 func TestPinningMultipleLevels(t *testing.T) {
