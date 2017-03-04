@@ -1,6 +1,8 @@
 package ipfs
 
 import (
+	"strings"
+
 	"github.com/apiarian/ipfs-pinbase/pinbase"
 	"github.com/ipfs/go-ipfs-api"
 	"github.com/pkg/errors"
@@ -27,7 +29,13 @@ func (ic *IPFSClient) Pin(h pinbase.Hash) error {
 }
 
 func (ic *IPFSClient) Unpin(h pinbase.Hash) error {
-	return errors.Wrap(ic.s.Unpin("/ipfs/"+string(h)), "unpin hash")
+	err := ic.s.Unpin("/ipfs/" + string(h))
+
+	if err != nil && strings.HasSuffix(err.Error(), "not pinned") {
+		return nil
+	}
+
+	return errors.Wrap(err, "unpin hash")
 }
 
 func (ic *IPFSClient) Pins() (map[pinbase.Hash]struct{}, error) {

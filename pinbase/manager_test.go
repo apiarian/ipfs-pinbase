@@ -1,37 +1,110 @@
 package pinbase
 
 import (
+	"sync"
 	"testing"
+	"time"
 )
 
-type BackendMock struct {
-	PinProcessorBumpFn      func() <-chan struct{}
-	PinProcessorBumpInvoked bool
-
-	PinRequirementsFn      func() map[Hash]bool
-	PinRequirementsInvoked bool
-
-	NotifyPinFn      func(Hash, *PinBackendState)
-	NotifyPinInvoked bool
+type NullBackend struct {
+	Bumper chan struct{}
+	c      int
+	m      *sync.Mutex
 }
 
-func (m *BackendMock) PinProcessorBump() <-chan struct{} {
-	m.PinProcessorBumpInvoked = true
-	return m.PinProcessorBumpFn()
+func NewNullBackend() *NullBackend {
+	return &NullBackend{
+		Bumper: make(chan struct{}),
+		m:      &sync.Mutex{},
+	}
 }
 
-func (m *BackendMock) PinRequirements() map[Hash]bool {
-	m.PinRequirementsInvoked = true
-	return m.PinRequirementsFn()
+func (nb *NullBackend) PinProcessorBump() <-chan struct{} {
+	return nb.Bumper
 }
 
-func (m *BackendMock) NotifyPin(h Hash, s *PinBackendState) {
-	m.NotifyPinInvoked = true
-	m.NotifyPinFn(h, s)
+func (nb *NullBackend) PinsCallCount() int {
+	nb.m.Lock()
+	defer nb.m.Unlock()
+	return nb.c
 }
 
-var _ PinBackend = &BackendMock{}
+func (nb *NullBackend) PinRequirements() map[Hash]bool {
+	nb.m.Lock()
+	defer nb.m.Unlock()
+	nb.c = nb.c + 1
 
-func TestProcessPins(t *testing.T) {
+	return make(map[Hash]bool)
+}
 
+func (nb *NullBackend) NotifyPin(_ Hash, _ *PinBackendState) {
+	return
+}
+
+var _ PinBackend = &NullBackend{}
+
+type NullJuggler struct {
+}
+
+func NewNullJuggler() *NullJuggler {
+	return &NullJuggler{}
+}
+
+func (nj *NullJuggler) Pin(Hash) error {
+	return nil
+}
+
+func (nj *NullJuggler) Unpin(Hash) error {
+	return nil
+}
+
+func (nj *NullJuggler) Pins() (map[Hash]struct{}, error) {
+	return make(map[Hash]struct{}), nil
+}
+
+var _ PinJuggler = &NullJuggler{}
+
+func TestManagePins(t *testing.T) {
+	done := make(chan struct{})
+	pb := NewNullBackend()
+	pj := NewNullJuggler()
+
+	if c := pb.PinsCallCount(); c != 0 {
+		t.Errorf("did not start out with a zero reqs call count: %d", c)
+	}
+
+	go ManagePins(done, pb, pj, 3*time.Second)
+
+	time.Sleep(10 * time.Millisecond)
+
+	if c := pb.PinsCallCount(); c != 1 {
+		t.Errorf("reqs call count should be 1: %d", c)
+	}
+
+	go func(c chan<- struct{}) { c <- struct{}{} }(pb.Bumper)
+
+	time.Sleep(10 * time.Millisecond)
+
+	if c := pb.PinsCallCount(); c != 2 {
+		t.Errorf("reqs call count should be 2: %d", c)
+	}
+
+	// wait for the timeout to trip
+	time.Sleep(4 * time.Second)
+
+	if c := pb.PinsCallCount(); c != 3 {
+		t.Errorf("reqs call count should be 3: %d", c)
+	}
+
+	close(done)
+
+	time.Sleep(10 * time.Millisecond)
+
+	go func(c chan<- struct{}) { c <- struct{}{} }(pb.Bumper)
+
+	time.Sleep(10 * time.Millisecond)
+
+	if c := pb.PinsCallCount(); c != 3 {
+		t.Errorf("reqs call count should be 3: %d", c)
+	}
 }

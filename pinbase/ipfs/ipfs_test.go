@@ -38,6 +38,8 @@ func TestPinning(t *testing.T) {
 		t.Errorf("failed to create object 2: %+v", err)
 	}
 
+	// start out with nothing pinned
+
 	pins, err := c.Pins()
 	if err != nil {
 		t.Errorf("failed to get pins: %+v", err)
@@ -50,6 +52,8 @@ func TestPinning(t *testing.T) {
 	if _, pinned := pins[pinbase.Hash(h2)]; pinned {
 		t.Errorf("object 1 (%s) somehow pinned already: %+v", h2, pins)
 	}
+
+	// pin objects 1 and 2
 
 	err = c.Pin(pinbase.Hash(h1))
 	if err != nil {
@@ -76,6 +80,30 @@ func TestPinning(t *testing.T) {
 		t.Errorf("object 1 (%s) not pinned: %+v", h2, pins)
 	}
 
+	// pinning object 1 again is not a problem
+
+	err = c.Pin(pinbase.Hash(h1))
+	if err != nil {
+		t.Errorf("failed to pin object 1 again: %+v", err)
+	}
+
+	time.Sleep(10 * time.Millisecond)
+
+	pins, err = c.Pins()
+	if err != nil {
+		t.Errorf("failed to get pins")
+	}
+
+	if _, pinned := pins[pinbase.Hash(h1)]; !pinned {
+		t.Errorf("object 1 (%s) not pinned: %+v", h1, pins)
+	}
+
+	if _, pinned := pins[pinbase.Hash(h2)]; !pinned {
+		t.Errorf("object 1 (%s) not pinned: %+v", h2, pins)
+	}
+
+	// unpin object 1
+
 	err = c.Unpin(pinbase.Hash(h1))
 	if err != nil {
 		t.Errorf("failed to unpin object 1: %+v", err)
@@ -96,8 +124,47 @@ func TestPinning(t *testing.T) {
 		t.Errorf("object 1 (%s) not pinned: %+v", h2, pins)
 	}
 
+	// unpinning junk should fail
+
 	err = c.Unpin(pinbase.Hash(h2 + "foobar"))
 	if err == nil {
 		t.Errorf("did not get an error unpinning junk")
+	}
+
+	time.Sleep(10 * time.Millisecond)
+
+	pins, err = c.Pins()
+	if err != nil {
+		t.Errorf("failed to get pins")
+	}
+
+	if _, pinned := pins[pinbase.Hash(h1)]; pinned {
+		t.Errorf("object 1 (%s) still pinned: %+v", h1, pins)
+	}
+
+	if _, pinned := pins[pinbase.Hash(h2)]; !pinned {
+		t.Errorf("object 1 (%s) not pinned: %+v", h2, pins)
+	}
+
+	// unpin object 1 again (an error in ipfs, but not in pinbase)
+
+	err = c.Unpin(pinbase.Hash(h1))
+	if err != nil {
+		t.Errorf("failed to unpin an unpinned object 1: %+v", err)
+	}
+
+	time.Sleep(10 * time.Millisecond)
+
+	pins, err = c.Pins()
+	if err != nil {
+		t.Errorf("failed to get pins")
+	}
+
+	if _, pinned := pins[pinbase.Hash(h1)]; pinned {
+		t.Errorf("object 1 (%s) still pinned: %+v", h1, pins)
+	}
+
+	if _, pinned := pins[pinbase.Hash(h2)]; !pinned {
+		t.Errorf("object 1 (%s) not pinned: %+v", h2, pins)
 	}
 }
