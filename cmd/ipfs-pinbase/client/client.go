@@ -18,10 +18,8 @@ import (
 // Client is the pinbase service client.
 type Client struct {
 	*goaclient.Client
-	LoginBasicAuthSigner goaclient.Signer
-	JWTSigner            goaclient.Signer
-	Encoder              *goa.HTTPEncoder
-	Decoder              *goa.HTTPDecoder
+	Encoder *goa.HTTPEncoder
+	Decoder *goa.HTTPDecoder
 }
 
 // New instantiates the client.
@@ -41,14 +39,4 @@ func New(c goaclient.Doer) *Client {
 	client.Decoder.Register(goa.NewJSONDecoder, "*/*")
 
 	return client
-}
-
-// SetLoginBasicAuthSigner sets the request signer for the LoginBasicAuth security scheme.
-func (c *Client) SetLoginBasicAuthSigner(signer goaclient.Signer) {
-	c.LoginBasicAuthSigner = signer
-}
-
-// SetJWTSigner sets the request signer for the jwt security scheme.
-func (c *Client) SetJWTSigner(signer goaclient.Signer) {
-	c.JWTSigner = signer
 }

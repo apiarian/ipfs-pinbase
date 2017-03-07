@@ -15,8 +15,8 @@ import (
 	"strings"
 )
 
-// NodeHref returns the resource href.
-func NodeHref(nodeHash interface{}) string {
-	paramnodeHash := strings.TrimLeftFunc(fmt.Sprintf("%v", nodeHash), func(r rune) bool { return r == '/' })
-	return fmt.Sprintf("/nodes/%v", paramnodeHash)
+// PartyHref returns the resource href.
+func PartyHref(partyHash interface{}) string {
+	parampartyHash := strings.TrimLeftFunc(fmt.Sprintf("%v", partyHash), func(r rune) bool { return r == '/' })
+	return fmt.Sprintf("/api/parties/%v", parampartyHash)
 }

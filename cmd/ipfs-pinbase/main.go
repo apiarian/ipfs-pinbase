@@ -18,12 +18,9 @@ func main() {
 	service.Use(middleware.ErrorHandler(service, true))
 	service.Use(middleware.Recover())
 
-	// Mount "login" controller
-	c := NewLoginController(service)
-	app.MountLoginController(service, c)
-	// Mount "node" controller
-	c2 := NewNodeController(service)
-	app.MountNodeController(service, c2)
+	// Mount "party" controller
+	c := NewPartyController(service)
+	app.MountPartyController(service, c)
 
 	// Start service
 	if err := service.ListenAndServe(":3000"); err != nil {

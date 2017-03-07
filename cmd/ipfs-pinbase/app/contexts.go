@@ -15,61 +15,37 @@ import (
 	"golang.org/x/net/context"
 )
 
-// LoginLoginContext provides the login login action context.
-type LoginLoginContext struct {
+// CreatePartyContext provides the party create action context.
+type CreatePartyContext struct {
 	context.Context
 	*goa.ResponseData
 	*goa.RequestData
+	Payload *CreatePartyPayload
 }
 
-// NewLoginLoginContext parses the incoming request URL and body, performs validations and creates the
-// context used by the login controller login action.
-func NewLoginLoginContext(ctx context.Context, service *goa.Service) (*LoginLoginContext, error) {
+// NewCreatePartyContext parses the incoming request URL and body, performs validations and creates the
+// context used by the party controller create action.
+func NewCreatePartyContext(ctx context.Context, service *goa.Service) (*CreatePartyContext, error) {
 	var err error
 	resp := goa.ContextResponse(ctx)
 	resp.Service = service
 	req := goa.ContextRequest(ctx)
-	rctx := LoginLoginContext{Context: ctx, ResponseData: resp, RequestData: req}
+	rctx := CreatePartyContext{Context: ctx, ResponseData: resp, RequestData: req}
 	return &rctx, err
 }
 
-// NoContent sends a HTTP response with status code 204.
-func (ctx *LoginLoginContext) NoContent() error {
-	ctx.ResponseData.WriteHeader(204)
-	return nil
-}
-
-// CreateNodeContext provides the node create action context.
-type CreateNodeContext struct {
-	context.Context
-	*goa.ResponseData
-	*goa.RequestData
-	Payload *CreateNodePayload
-}
-
-// NewCreateNodeContext parses the incoming request URL and body, performs validations and creates the
-// context used by the node controller create action.
-func NewCreateNodeContext(ctx context.Context, service *goa.Service) (*CreateNodeContext, error) {
-	var err error
-	resp := goa.ContextResponse(ctx)
-	resp.Service = service
-	req := goa.ContextRequest(ctx)
-	rctx := CreateNodeContext{Context: ctx, ResponseData: resp, RequestData: req}
-	return &rctx, err
-}
-
-// createNodePayload is the node create action payload.
-type createNodePayload struct {
-	// The API URL for the node, possibly relative to the pinbase (i.e. localhost)
-	APIURL *string `form:"api-url,omitempty" json:"api-url,omitempty" xml:"api-url,omitempty"`
-	// A helpful description of the node
+// createPartyPayload is the party create action payload.
+type createPartyPayload struct {
+	// A helpful description of the party
 	Description *string `form:"description,omitempty" json:"description,omitempty" xml:"description,omitempty"`
+	// The hash of the object describing the party
+	Hash *string `form:"hash,omitempty" json:"hash,omitempty" xml:"hash,omitempty"`
 }
 
 // Validate runs the validation rules defined in the design.
-func (payload *createNodePayload) Validate() (err error) {
-	if payload.APIURL == nil {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "api-url"))
+func (payload *createPartyPayload) Validate() (err error) {
+	if payload.Hash == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "hash"))
 	}
 	if payload.Description == nil {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "description"))
@@ -77,30 +53,30 @@ func (payload *createNodePayload) Validate() (err error) {
 	return
 }
 
-// Publicize creates CreateNodePayload from createNodePayload
-func (payload *createNodePayload) Publicize() *CreateNodePayload {
-	var pub CreateNodePayload
-	if payload.APIURL != nil {
-		pub.APIURL = *payload.APIURL
-	}
+// Publicize creates CreatePartyPayload from createPartyPayload
+func (payload *createPartyPayload) Publicize() *CreatePartyPayload {
+	var pub CreatePartyPayload
 	if payload.Description != nil {
 		pub.Description = *payload.Description
+	}
+	if payload.Hash != nil {
+		pub.Hash = *payload.Hash
 	}
 	return &pub
 }
 
-// CreateNodePayload is the node create action payload.
-type CreateNodePayload struct {
-	// The API URL for the node, possibly relative to the pinbase (i.e. localhost)
-	APIURL string `form:"api-url" json:"api-url" xml:"api-url"`
-	// A helpful description of the node
+// CreatePartyPayload is the party create action payload.
+type CreatePartyPayload struct {
+	// A helpful description of the party
 	Description string `form:"description" json:"description" xml:"description"`
+	// The hash of the object describing the party
+	Hash string `form:"hash" json:"hash" xml:"hash"`
 }
 
 // Validate runs the validation rules defined in the design.
-func (payload *CreateNodePayload) Validate() (err error) {
-	if payload.APIURL == "" {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "api-url"))
+func (payload *CreatePartyPayload) Validate() (err error) {
+	if payload.Hash == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "hash"))
 	}
 	if payload.Description == "" {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "description"))
@@ -109,161 +85,161 @@ func (payload *CreateNodePayload) Validate() (err error) {
 }
 
 // Created sends a HTTP response with status code 201.
-func (ctx *CreateNodeContext) Created() error {
+func (ctx *CreatePartyContext) Created() error {
 	ctx.ResponseData.WriteHeader(201)
 	return nil
 }
 
 // BadRequest sends a HTTP response with status code 400.
-func (ctx *CreateNodeContext) BadRequest(r error) error {
+func (ctx *CreatePartyContext) BadRequest(r error) error {
 	ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
 	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
 }
 
-// DeleteNodeContext provides the node delete action context.
-type DeleteNodeContext struct {
+// DeletePartyContext provides the party delete action context.
+type DeletePartyContext struct {
 	context.Context
 	*goa.ResponseData
 	*goa.RequestData
-	NodeHash string
+	PartyHash string
 }
 
-// NewDeleteNodeContext parses the incoming request URL and body, performs validations and creates the
-// context used by the node controller delete action.
-func NewDeleteNodeContext(ctx context.Context, service *goa.Service) (*DeleteNodeContext, error) {
+// NewDeletePartyContext parses the incoming request URL and body, performs validations and creates the
+// context used by the party controller delete action.
+func NewDeletePartyContext(ctx context.Context, service *goa.Service) (*DeletePartyContext, error) {
 	var err error
 	resp := goa.ContextResponse(ctx)
 	resp.Service = service
 	req := goa.ContextRequest(ctx)
-	rctx := DeleteNodeContext{Context: ctx, ResponseData: resp, RequestData: req}
-	paramNodeHash := req.Params["nodeHash"]
-	if len(paramNodeHash) > 0 {
-		rawNodeHash := paramNodeHash[0]
-		rctx.NodeHash = rawNodeHash
+	rctx := DeletePartyContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramPartyHash := req.Params["partyHash"]
+	if len(paramPartyHash) > 0 {
+		rawPartyHash := paramPartyHash[0]
+		rctx.PartyHash = rawPartyHash
 	}
 	return &rctx, err
 }
 
 // NoContent sends a HTTP response with status code 204.
-func (ctx *DeleteNodeContext) NoContent() error {
+func (ctx *DeletePartyContext) NoContent() error {
 	ctx.ResponseData.WriteHeader(204)
 	return nil
 }
 
 // BadRequest sends a HTTP response with status code 400.
-func (ctx *DeleteNodeContext) BadRequest(r error) error {
+func (ctx *DeletePartyContext) BadRequest(r error) error {
 	ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
 	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
 }
 
 // NotFound sends a HTTP response with status code 404.
-func (ctx *DeleteNodeContext) NotFound() error {
+func (ctx *DeletePartyContext) NotFound() error {
 	ctx.ResponseData.WriteHeader(404)
 	return nil
 }
 
-// ListNodeContext provides the node list action context.
-type ListNodeContext struct {
+// ListPartyContext provides the party list action context.
+type ListPartyContext struct {
 	context.Context
 	*goa.ResponseData
 	*goa.RequestData
 }
 
-// NewListNodeContext parses the incoming request URL and body, performs validations and creates the
-// context used by the node controller list action.
-func NewListNodeContext(ctx context.Context, service *goa.Service) (*ListNodeContext, error) {
+// NewListPartyContext parses the incoming request URL and body, performs validations and creates the
+// context used by the party controller list action.
+func NewListPartyContext(ctx context.Context, service *goa.Service) (*ListPartyContext, error) {
 	var err error
 	resp := goa.ContextResponse(ctx)
 	resp.Service = service
 	req := goa.ContextRequest(ctx)
-	rctx := ListNodeContext{Context: ctx, ResponseData: resp, RequestData: req}
+	rctx := ListPartyContext{Context: ctx, ResponseData: resp, RequestData: req}
 	return &rctx, err
 }
 
 // OK sends a HTTP response with status code 200.
-func (ctx *ListNodeContext) OK(r PinbaseNodeCollection) error {
-	ctx.ResponseData.Header().Set("Content-Type", "application/vnd.pinbase.node+json; type=collection")
+func (ctx *ListPartyContext) OK(r PinbasePartyCollection) error {
+	ctx.ResponseData.Header().Set("Content-Type", "application/vnd.pinbase.party+json; type=collection")
 	if r == nil {
-		r = PinbaseNodeCollection{}
+		r = PinbasePartyCollection{}
 	}
 	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
 }
 
-// ShowNodeContext provides the node show action context.
-type ShowNodeContext struct {
+// ShowPartyContext provides the party show action context.
+type ShowPartyContext struct {
 	context.Context
 	*goa.ResponseData
 	*goa.RequestData
-	NodeHash string
+	PartyHash string
 }
 
-// NewShowNodeContext parses the incoming request URL and body, performs validations and creates the
-// context used by the node controller show action.
-func NewShowNodeContext(ctx context.Context, service *goa.Service) (*ShowNodeContext, error) {
+// NewShowPartyContext parses the incoming request URL and body, performs validations and creates the
+// context used by the party controller show action.
+func NewShowPartyContext(ctx context.Context, service *goa.Service) (*ShowPartyContext, error) {
 	var err error
 	resp := goa.ContextResponse(ctx)
 	resp.Service = service
 	req := goa.ContextRequest(ctx)
-	rctx := ShowNodeContext{Context: ctx, ResponseData: resp, RequestData: req}
-	paramNodeHash := req.Params["nodeHash"]
-	if len(paramNodeHash) > 0 {
-		rawNodeHash := paramNodeHash[0]
-		rctx.NodeHash = rawNodeHash
+	rctx := ShowPartyContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramPartyHash := req.Params["partyHash"]
+	if len(paramPartyHash) > 0 {
+		rawPartyHash := paramPartyHash[0]
+		rctx.PartyHash = rawPartyHash
 	}
 	return &rctx, err
 }
 
 // OK sends a HTTP response with status code 200.
-func (ctx *ShowNodeContext) OK(r *PinbaseNode) error {
-	ctx.ResponseData.Header().Set("Content-Type", "application/vnd.pinbase.node+json")
+func (ctx *ShowPartyContext) OK(r *PinbaseParty) error {
+	ctx.ResponseData.Header().Set("Content-Type", "application/vnd.pinbase.party+json")
 	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
 }
 
 // NotFound sends a HTTP response with status code 404.
-func (ctx *ShowNodeContext) NotFound() error {
+func (ctx *ShowPartyContext) NotFound() error {
 	ctx.ResponseData.WriteHeader(404)
 	return nil
 }
 
-// UpdateNodeContext provides the node update action context.
-type UpdateNodeContext struct {
+// UpdatePartyContext provides the party update action context.
+type UpdatePartyContext struct {
 	context.Context
 	*goa.ResponseData
 	*goa.RequestData
-	NodeHash string
-	Payload  *NodePayload
+	PartyHash string
+	Payload   *PartyPayload
 }
 
-// NewUpdateNodeContext parses the incoming request URL and body, performs validations and creates the
-// context used by the node controller update action.
-func NewUpdateNodeContext(ctx context.Context, service *goa.Service) (*UpdateNodeContext, error) {
+// NewUpdatePartyContext parses the incoming request URL and body, performs validations and creates the
+// context used by the party controller update action.
+func NewUpdatePartyContext(ctx context.Context, service *goa.Service) (*UpdatePartyContext, error) {
 	var err error
 	resp := goa.ContextResponse(ctx)
 	resp.Service = service
 	req := goa.ContextRequest(ctx)
-	rctx := UpdateNodeContext{Context: ctx, ResponseData: resp, RequestData: req}
-	paramNodeHash := req.Params["nodeHash"]
-	if len(paramNodeHash) > 0 {
-		rawNodeHash := paramNodeHash[0]
-		rctx.NodeHash = rawNodeHash
+	rctx := UpdatePartyContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramPartyHash := req.Params["partyHash"]
+	if len(paramPartyHash) > 0 {
+		rawPartyHash := paramPartyHash[0]
+		rctx.PartyHash = rawPartyHash
 	}
 	return &rctx, err
 }
 
 // OK sends a HTTP response with status code 200.
-func (ctx *UpdateNodeContext) OK(r *PinbaseNode) error {
-	ctx.ResponseData.Header().Set("Content-Type", "application/vnd.pinbase.node+json")
+func (ctx *UpdatePartyContext) OK(r *PinbaseParty) error {
+	ctx.ResponseData.Header().Set("Content-Type", "application/vnd.pinbase.party+json")
 	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
 }
 
 // BadRequest sends a HTTP response with status code 400.
-func (ctx *UpdateNodeContext) BadRequest(r error) error {
+func (ctx *UpdatePartyContext) BadRequest(r error) error {
 	ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
 	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
 }
 
 // NotFound sends a HTTP response with status code 404.
-func (ctx *UpdateNodeContext) NotFound() error {
+func (ctx *UpdatePartyContext) NotFound() error {
 	ctx.ResponseData.WriteHeader(404)
 	return nil
 }

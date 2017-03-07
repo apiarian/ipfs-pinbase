@@ -1,64 +1,53 @@
+basePath: /api
 consumes:
 - application/json
 definitions:
-  CreateNodePayload:
+  CreatePartyPayload:
     example:
-      api-url: Et officia rerum accusamus voluptates atque reprehenderit.
-      description: Vero minus quisquam nulla veritatis atque.
+      description: Nostrum architecto repellendus molestiae et.
+      hash: Rerum accusamus voluptates atque.
     properties:
-      api-url:
-        description: The API URL for the node, possibly relative to the pinbase (i.e.
-          localhost)
-        example: Et officia rerum accusamus voluptates atque reprehenderit.
-        type: string
       description:
-        description: A helpful description of the node
-        example: Vero minus quisquam nulla veritatis atque.
-        type: string
-    required:
-    - api-url
-    - description
-    title: CreateNodePayload
-    type: object
-  PinbaseNode:
-    description: An IPFS node (default view)
-    example:
-      api-url: Ut provident ratione doloribus id consequuntur.
-      description: Reiciendis necessitatibus dolor magnam voluptates.
-      hash: Iusto nostrum architecto.
-    properties:
-      api-url:
-        description: The API URL for the node, possibly relative to the pinbase (i.e.
-          localhost)
-        example: Ut provident ratione doloribus id consequuntur.
-        type: string
-      description:
-        description: A helpful description of the node
-        example: Reiciendis necessitatibus dolor magnam voluptates.
+        description: A helpful description of the party
+        example: Nostrum architecto repellendus molestiae et.
         type: string
       hash:
-        description: The nodes' unique hash
-        example: Iusto nostrum architecto.
+        description: The hash of the object describing the party
+        example: Rerum accusamus voluptates atque.
         type: string
     required:
     - hash
     - description
-    - api-url
-    title: 'Mediatype identifier: application/vnd.pinbase.node+json; view=default'
+    title: CreatePartyPayload
     type: object
-  PinbaseNodeCollection:
-    description: PinbaseNodeCollection is the media type for an array of PinbaseNode
+  PinbaseParty:
+    description: A Pinbase Party (default view)
+    example:
+      description: Ut provident ratione doloribus id consequuntur.
+      hash: Reiciendis necessitatibus dolor magnam voluptates.
+    properties:
+      description:
+        description: A helpful description of the party
+        example: Ut provident ratione doloribus id consequuntur.
+        type: string
+      hash:
+        description: The hash of the object describing the party
+        example: Reiciendis necessitatibus dolor magnam voluptates.
+        type: string
+    required:
+    - hash
+    - description
+    title: 'Mediatype identifier: application/vnd.pinbase.party+json; view=default'
+    type: object
+  PinbasePartyCollection:
+    description: PinbasePartyCollection is the media type for an array of PinbaseParty
       (default view)
     example:
-    - api-url: Ut provident ratione doloribus id consequuntur.
-      description: Reiciendis necessitatibus dolor magnam voluptates.
-      hash: Iusto nostrum architecto.
-    - api-url: Ut provident ratione doloribus id consequuntur.
-      description: Reiciendis necessitatibus dolor magnam voluptates.
-      hash: Iusto nostrum architecto.
+    - description: Ut provident ratione doloribus id consequuntur.
+      hash: Reiciendis necessitatibus dolor magnam voluptates.
     items:
-      $ref: '#/definitions/PinbaseNode'
-    title: 'Mediatype identifier: application/vnd.pinbase.node+json; type=collection;
+      $ref: '#/definitions/PinbaseParty'
+    title: 'Mediatype identifier: application/vnd.pinbase.party+json; type=collection;
       view=default'
     type: array
   error:
@@ -98,21 +87,20 @@ definitions:
         type: string
     title: 'Mediatype identifier: application/vnd.goa.error; view=default'
     type: object
-  node-payload:
+  party-payload:
     example:
-      api-url: Et officia rerum accusamus voluptates atque reprehenderit.
-      description: Vero minus quisquam nulla veritatis atque.
+      description: Nostrum architecto repellendus molestiae et.
+      hash: Rerum accusamus voluptates atque.
     properties:
-      api-url:
-        description: The API URL for the node, possibly relative to the pinbase (i.e.
-          localhost)
-        example: Et officia rerum accusamus voluptates atque reprehenderit.
-        type: string
       description:
-        description: A helpful description of the node
-        example: Vero minus quisquam nulla veritatis atque.
+        description: A helpful description of the party
+        example: Nostrum architecto repellendus molestiae et.
         type: string
-    title: node-payload
+      hash:
+        description: The hash of the object describing the party
+        example: Rerum accusamus voluptates atque.
+        type: string
+    title: party-payload
     type: object
 host: localhost:3000
 info:
@@ -126,65 +114,36 @@ info:
   title: pinbase
   version: "0.1"
 paths:
-  /login:
-    post:
-      description: Get a new JWT token
-      operationId: login#login
-      responses:
-        "204":
-          description: No Content
-          headers:
-            Authorization:
-              description: The new JWT
-              type: string
-      schemes:
-      - http
-      security:
-      - LoginBasicAuth: []
-      summary: login login
-      tags:
-      - login
-  /nodes:
+  /parties:
     get:
-      description: |-
-        List the nodes available to this pinbase
-
-        Required security scopes:
-          * `node:view`
-      operationId: node#list
+      description: List the parties available in this pinbase
+      operationId: party#list
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/PinbaseNodeCollection'
+            $ref: '#/definitions/PinbasePartyCollection'
       schemes:
       - http
-      security:
-      - jwt:
-        - node:view
-      summary: list node
+      summary: list party
       tags:
-      - node
+      - party
     post:
-      description: |-
-        Connect to a node
-
-        Required security scopes:
-          * `node:create`
-      operationId: node#create
+      description: Create a party
+      operationId: party#create
       parameters:
       - in: body
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/CreateNodePayload'
+          $ref: '#/definitions/CreatePartyPayload'
       responses:
         "201":
           description: Resource created
           headers:
             Location:
               description: href to the created resource
-              pattern: /nodes/.+
+              pattern: /parties/.+
               type: string
         "400":
           description: Bad Request
@@ -192,24 +151,17 @@ paths:
             $ref: '#/definitions/error'
       schemes:
       - http
-      security:
-      - jwt:
-        - node:create
-      summary: create node
+      summary: create party
       tags:
-      - node
-  /nodes/{nodeHash}:
+      - party
+  /parties/{partyHash}:
     delete:
-      description: |-
-        Delete a node
-
-        Required security scopes:
-          * `node:delete`
-      operationId: node#delete
+      description: Delete a party
+      operationId: party#delete
       parameters:
-      - description: Node Hash
+      - description: Party Hash
         in: path
-        name: nodeHash
+        name: partyHash
         required: true
         type: string
       responses:
@@ -223,63 +175,49 @@ paths:
           description: Not Found
       schemes:
       - http
-      security:
-      - jwt:
-        - node:delete
-      summary: delete node
+      summary: delete party
       tags:
-      - node
+      - party
     get:
-      description: |-
-        Get node by hash
-
-        Required security scopes:
-          * `node:view`
-      operationId: node#show
+      description: Get the party by hash
+      operationId: party#show
       parameters:
-      - description: Node Hash
+      - description: Party Hash
         in: path
-        name: nodeHash
+        name: partyHash
         required: true
         type: string
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/PinbaseNode'
+            $ref: '#/definitions/PinbaseParty'
         "404":
           description: Not Found
       schemes:
       - http
-      security:
-      - jwt:
-        - node:view
-      summary: show node
+      summary: show party
       tags:
-      - node
+      - party
     patch:
-      description: |-
-        Change a node's address (must be the same node-id) or description
-
-        Required security scopes:
-          * `node:edit`
-      operationId: node#update
+      description: Change a party's description
+      operationId: party#update
       parameters:
-      - description: Node Hash
+      - description: Party Hash
         in: path
-        name: nodeHash
+        name: partyHash
         required: true
         type: string
       - in: body
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/node-payload'
+          $ref: '#/definitions/party-payload'
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/PinbaseNode'
+            $ref: '#/definitions/PinbaseParty'
         "400":
           description: Bad Request
           schema:
@@ -288,12 +226,9 @@ paths:
           description: Not Found
       schemes:
       - http
-      security:
-      - jwt:
-        - node:edit
-      summary: update node
+      summary: update party
       tags:
-      - node
+      - party
 produces:
 - application/json
 responses:
@@ -303,21 +238,4 @@ responses:
     description: Not Found
 schemes:
 - http
-securityDefinitions:
-  LoginBasicAuth:
-    type: basic
-  jwt:
-    description: |2-
-
-
-      **Token URL**: http://localhost:3000/login
-
-      **Security Scopes**:
-        * `node:create`: no description
-        * `node:delete`: no description
-        * `node:edit`: no description
-        * `node:view`: no description
-    in: header
-    name: Authorization
-    type: apiKey
 swagger: "2.0"

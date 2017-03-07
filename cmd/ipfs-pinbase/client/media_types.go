@@ -22,46 +22,41 @@ func (c *Client) DecodeErrorResponse(resp *http.Response) (*goa.ErrorResponse, e
 	return &decoded, err
 }
 
-// An IPFS node (default view)
+// A Pinbase Party (default view)
 //
-// Identifier: application/vnd.pinbase.node+json; view=default
-type PinbaseNode struct {
-	// The API URL for the node, possibly relative to the pinbase (i.e. localhost)
-	APIURL string `form:"api-url" json:"api-url" xml:"api-url"`
-	// A helpful description of the node
+// Identifier: application/vnd.pinbase.party+json; view=default
+type PinbaseParty struct {
+	// A helpful description of the party
 	Description string `form:"description" json:"description" xml:"description"`
-	// The nodes' unique hash
+	// The hash of the object describing the party
 	Hash string `form:"hash" json:"hash" xml:"hash"`
 }
 
-// Validate validates the PinbaseNode media type instance.
-func (mt *PinbaseNode) Validate() (err error) {
+// Validate validates the PinbaseParty media type instance.
+func (mt *PinbaseParty) Validate() (err error) {
 	if mt.Hash == "" {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "hash"))
 	}
 	if mt.Description == "" {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "description"))
 	}
-	if mt.APIURL == "" {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "api-url"))
-	}
 	return
 }
 
-// DecodePinbaseNode decodes the PinbaseNode instance encoded in resp body.
-func (c *Client) DecodePinbaseNode(resp *http.Response) (*PinbaseNode, error) {
-	var decoded PinbaseNode
+// DecodePinbaseParty decodes the PinbaseParty instance encoded in resp body.
+func (c *Client) DecodePinbaseParty(resp *http.Response) (*PinbaseParty, error) {
+	var decoded PinbaseParty
 	err := c.Decoder.Decode(&decoded, resp.Body, resp.Header.Get("Content-Type"))
 	return &decoded, err
 }
 
-// PinbaseNodeCollection is the media type for an array of PinbaseNode (default view)
+// PinbasePartyCollection is the media type for an array of PinbaseParty (default view)
 //
-// Identifier: application/vnd.pinbase.node+json; type=collection; view=default
-type PinbaseNodeCollection []*PinbaseNode
+// Identifier: application/vnd.pinbase.party+json; type=collection; view=default
+type PinbasePartyCollection []*PinbaseParty
 
-// Validate validates the PinbaseNodeCollection media type instance.
-func (mt PinbaseNodeCollection) Validate() (err error) {
+// Validate validates the PinbasePartyCollection media type instance.
+func (mt PinbasePartyCollection) Validate() (err error) {
 	for _, e := range mt {
 		if e != nil {
 			if err2 := e.Validate(); err2 != nil {
@@ -72,9 +67,9 @@ func (mt PinbaseNodeCollection) Validate() (err error) {
 	return
 }
 
-// DecodePinbaseNodeCollection decodes the PinbaseNodeCollection instance encoded in resp body.
-func (c *Client) DecodePinbaseNodeCollection(resp *http.Response) (PinbaseNodeCollection, error) {
-	var decoded PinbaseNodeCollection
+// DecodePinbasePartyCollection decodes the PinbasePartyCollection instance encoded in resp body.
+func (c *Client) DecodePinbasePartyCollection(resp *http.Response) (PinbasePartyCollection, error) {
+	var decoded PinbasePartyCollection
 	err := c.Decoder.Decode(&decoded, resp.Body, resp.Header.Get("Content-Type"))
 	return decoded, err
 }

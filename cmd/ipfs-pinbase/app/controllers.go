@@ -27,14 +27,18 @@ func initService(service *goa.Service) {
 	service.Decoder.Register(goa.NewJSONDecoder, "*/*")
 }
 
-// LoginController is the controller interface for the Login actions.
-type LoginController interface {
+// PartyController is the controller interface for the Party actions.
+type PartyController interface {
 	goa.Muxer
-	Login(*LoginLoginContext) error
+	Create(*CreatePartyContext) error
+	Delete(*DeletePartyContext) error
+	List(*ListPartyContext) error
+	Show(*ShowPartyContext) error
+	Update(*UpdatePartyContext) error
 }
 
-// MountLoginController "mounts" a Login resource controller on the given service.
-func MountLoginController(service *goa.Service, ctrl LoginController) {
+// MountPartyController "mounts" a Party resource controller on the given service.
+func MountPartyController(service *goa.Service, ctrl PartyController) {
 	initService(service)
 	var h goa.Handler
 
@@ -44,53 +48,20 @@ func MountLoginController(service *goa.Service, ctrl LoginController) {
 			return err
 		}
 		// Build the context
-		rctx, err := NewLoginLoginContext(ctx, service)
-		if err != nil {
-			return err
-		}
-		return ctrl.Login(rctx)
-	}
-	h = handleSecurity("LoginBasicAuth", h)
-	service.Mux.Handle("POST", "/login", ctrl.MuxHandler("Login", h, nil))
-	service.LogInfo("mount", "ctrl", "Login", "action", "Login", "route", "POST /login", "security", "LoginBasicAuth")
-}
-
-// NodeController is the controller interface for the Node actions.
-type NodeController interface {
-	goa.Muxer
-	Create(*CreateNodeContext) error
-	Delete(*DeleteNodeContext) error
-	List(*ListNodeContext) error
-	Show(*ShowNodeContext) error
-	Update(*UpdateNodeContext) error
-}
-
-// MountNodeController "mounts" a Node resource controller on the given service.
-func MountNodeController(service *goa.Service, ctrl NodeController) {
-	initService(service)
-	var h goa.Handler
-
-	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
-		// Check if there was an error loading the request
-		if err := goa.ContextError(ctx); err != nil {
-			return err
-		}
-		// Build the context
-		rctx, err := NewCreateNodeContext(ctx, service)
+		rctx, err := NewCreatePartyContext(ctx, service)
 		if err != nil {
 			return err
 		}
 		// Build the payload
 		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
-			rctx.Payload = rawPayload.(*CreateNodePayload)
+			rctx.Payload = rawPayload.(*CreatePartyPayload)
 		} else {
 			return goa.MissingPayloadError()
 		}
 		return ctrl.Create(rctx)
 	}
-	h = handleSecurity("jwt", h, "node:create")
-	service.Mux.Handle("POST", "/nodes", ctrl.MuxHandler("Create", h, unmarshalCreateNodePayload))
-	service.LogInfo("mount", "ctrl", "Node", "action", "Create", "route", "POST /nodes", "security", "jwt")
+	service.Mux.Handle("POST", "/api/parties", ctrl.MuxHandler("Create", h, unmarshalCreatePartyPayload))
+	service.LogInfo("mount", "ctrl", "Party", "action", "Create", "route", "POST /api/parties")
 
 	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 		// Check if there was an error loading the request
@@ -98,15 +69,14 @@ func MountNodeController(service *goa.Service, ctrl NodeController) {
 			return err
 		}
 		// Build the context
-		rctx, err := NewDeleteNodeContext(ctx, service)
+		rctx, err := NewDeletePartyContext(ctx, service)
 		if err != nil {
 			return err
 		}
 		return ctrl.Delete(rctx)
 	}
-	h = handleSecurity("jwt", h, "node:delete")
-	service.Mux.Handle("DELETE", "/nodes/:nodeHash", ctrl.MuxHandler("Delete", h, nil))
-	service.LogInfo("mount", "ctrl", "Node", "action", "Delete", "route", "DELETE /nodes/:nodeHash", "security", "jwt")
+	service.Mux.Handle("DELETE", "/api/parties/:partyHash", ctrl.MuxHandler("Delete", h, nil))
+	service.LogInfo("mount", "ctrl", "Party", "action", "Delete", "route", "DELETE /api/parties/:partyHash")
 
 	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 		// Check if there was an error loading the request
@@ -114,15 +84,14 @@ func MountNodeController(service *goa.Service, ctrl NodeController) {
 			return err
 		}
 		// Build the context
-		rctx, err := NewListNodeContext(ctx, service)
+		rctx, err := NewListPartyContext(ctx, service)
 		if err != nil {
 			return err
 		}
 		return ctrl.List(rctx)
 	}
-	h = handleSecurity("jwt", h, "node:view")
-	service.Mux.Handle("GET", "/nodes", ctrl.MuxHandler("List", h, nil))
-	service.LogInfo("mount", "ctrl", "Node", "action", "List", "route", "GET /nodes", "security", "jwt")
+	service.Mux.Handle("GET", "/api/parties", ctrl.MuxHandler("List", h, nil))
+	service.LogInfo("mount", "ctrl", "Party", "action", "List", "route", "GET /api/parties")
 
 	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 		// Check if there was an error loading the request
@@ -130,15 +99,14 @@ func MountNodeController(service *goa.Service, ctrl NodeController) {
 			return err
 		}
 		// Build the context
-		rctx, err := NewShowNodeContext(ctx, service)
+		rctx, err := NewShowPartyContext(ctx, service)
 		if err != nil {
 			return err
 		}
 		return ctrl.Show(rctx)
 	}
-	h = handleSecurity("jwt", h, "node:view")
-	service.Mux.Handle("GET", "/nodes/:nodeHash", ctrl.MuxHandler("Show", h, nil))
-	service.LogInfo("mount", "ctrl", "Node", "action", "Show", "route", "GET /nodes/:nodeHash", "security", "jwt")
+	service.Mux.Handle("GET", "/api/parties/:partyHash", ctrl.MuxHandler("Show", h, nil))
+	service.LogInfo("mount", "ctrl", "Party", "action", "Show", "route", "GET /api/parties/:partyHash")
 
 	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 		// Check if there was an error loading the request
@@ -146,26 +114,25 @@ func MountNodeController(service *goa.Service, ctrl NodeController) {
 			return err
 		}
 		// Build the context
-		rctx, err := NewUpdateNodeContext(ctx, service)
+		rctx, err := NewUpdatePartyContext(ctx, service)
 		if err != nil {
 			return err
 		}
 		// Build the payload
 		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
-			rctx.Payload = rawPayload.(*NodePayload)
+			rctx.Payload = rawPayload.(*PartyPayload)
 		} else {
 			return goa.MissingPayloadError()
 		}
 		return ctrl.Update(rctx)
 	}
-	h = handleSecurity("jwt", h, "node:edit")
-	service.Mux.Handle("PATCH", "/nodes/:nodeHash", ctrl.MuxHandler("Update", h, unmarshalUpdateNodePayload))
-	service.LogInfo("mount", "ctrl", "Node", "action", "Update", "route", "PATCH /nodes/:nodeHash", "security", "jwt")
+	service.Mux.Handle("PATCH", "/api/parties/:partyHash", ctrl.MuxHandler("Update", h, unmarshalUpdatePartyPayload))
+	service.LogInfo("mount", "ctrl", "Party", "action", "Update", "route", "PATCH /api/parties/:partyHash")
 }
 
-// unmarshalCreateNodePayload unmarshals the request body into the context request data Payload field.
-func unmarshalCreateNodePayload(ctx context.Context, service *goa.Service, req *http.Request) error {
-	payload := &createNodePayload{}
+// unmarshalCreatePartyPayload unmarshals the request body into the context request data Payload field.
+func unmarshalCreatePartyPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
+	payload := &createPartyPayload{}
 	if err := service.DecodeRequest(req, payload); err != nil {
 		return err
 	}
@@ -178,9 +145,9 @@ func unmarshalCreateNodePayload(ctx context.Context, service *goa.Service, req *
 	return nil
 }
 
-// unmarshalUpdateNodePayload unmarshals the request body into the context request data Payload field.
-func unmarshalUpdateNodePayload(ctx context.Context, service *goa.Service, req *http.Request) error {
-	payload := &nodePayload{}
+// unmarshalUpdatePartyPayload unmarshals the request body into the context request data Payload field.
+func unmarshalUpdatePartyPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
+	payload := &partyPayload{}
 	if err := service.DecodeRequest(req, payload); err != nil {
 		return err
 	}

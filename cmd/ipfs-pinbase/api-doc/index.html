@@ -8,7 +8,7 @@
 <body>
 <div class="container">
     <h1>pinbase</h1>
-    <p class="sw-info">Version: <span class="sw-info-version">0.1</span></p>
+    <p class="sw-info">Base URL: <span class="sw-info-basePath">/api</span>, Version: <span class="sw-info-version">0.1</span></p>
     <p><p>The IPFS-pinbase API</p>
     </p>
     
@@ -26,224 +26,86 @@
         http
     </div>
     
+        <h2 id="swagger--summary-no-tags">Summary</h2>
+        <table class="table table-bordered table-condensed swagger--summary">
+            <thead>
+            <tr>
+                <th>Path</th>
+                <th>Operation</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+                    <tr>
+                            <td class="swagger--summary-path" rowspan="2">
+                                <a href="#path--parties">/parties</a>
+                            </td>
+                        <td>
+                            <a href="#operation--parties-get">GET</a>
+                        </td>
+                        <td>
+                            <p>list party</p>
         
-        <h2 id="swagger--summary-tags">Summary</h2>
-            <h3 id="tag-login" class="swagger-summary-tag">Tag: login</h3>
-            
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a href="#operation--parties-post">POST</a>
+                        </td>
+                        <td>
+                            <p>create party</p>
         
-            <table class="table table-bordered table-condensed swagger--summary">
-                <thead>
-                <tr>
-                    <th>Operation</th>
-                    <th>Description</th>
-                </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><a href="#operation--login-post">POST /login</a></td>
-                        <td><p>login login</p>
-        </td>
+                        </td>
                     </tr>
-                </tbody>
-            </table>
-            <h3 id="tag-node" class="swagger-summary-tag">Tag: node</h3>
-            
+                    <tr>
+                            <td class="swagger--summary-path" rowspan="3">
+                                <a href="#path--parties--partyHash-">/parties/{partyHash}</a>
+                            </td>
+                        <td>
+                            <a href="#operation--parties--partyHash--delete">DELETE</a>
+                        </td>
+                        <td>
+                            <p>delete party</p>
         
-            <table class="table table-bordered table-condensed swagger--summary">
-                <thead>
-                <tr>
-                    <th>Operation</th>
-                    <th>Description</th>
-                </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><a href="#operation--nodes-get">GET /nodes</a></td>
-                        <td><p>list node</p>
-        </td>
+                        </td>
                     </tr>
                     <tr>
-                        <td><a href="#operation--nodes-post">POST /nodes</a></td>
-                        <td><p>create node</p>
-        </td>
-                    </tr>
-                    <tr>
-                        <td><a href="#operation--nodes--nodeHash--get">GET /nodes/{nodeHash}</a></td>
-                        <td><p>show node</p>
-        </td>
-                    </tr>
-                    <tr>
-                        <td><a href="#operation--nodes--nodeHash--delete">DELETE /nodes/{nodeHash}</a></td>
-                        <td><p>delete node</p>
-        </td>
-                    </tr>
-                    <tr>
-                        <td><a href="#operation--nodes--nodeHash--patch">PATCH /nodes/{nodeHash}</a></td>
-                        <td><p>update node</p>
-        </td>
-                    </tr>
-                </tbody>
-            </table>
+                        <td>
+                            <a href="#operation--parties--partyHash--get">GET</a>
+                        </td>
+                        <td>
+                            <p>show party</p>
         
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a href="#operation--parties--partyHash--patch">PATCH</a>
+                        </td>
+                        <td>
+                            <p>update party</p>
+        
+                        </td>
+                    </tr>
+            </tbody>
+        </table>
     
     
-        <h2>Security</h2>
-    
-            <div id="security-definition-LoginBasicAuth" class="panel panel-security-definition panel-security-definition-basic">
-                <div class="panel-heading">
-                    <h3 class="panel-title"><span class="security-name">LoginBasicAuth</span></h3>
-                    Type: basic
-                </div>
-                <div class="panel-body">                
-                    <section class="sw-security-properties">
-                        <dl>                
-                        </dl>
-                    </section>                
-                </div>
-            </div>        
-            <div id="security-definition-jwt" class="panel panel-security-definition panel-security-definition-apiKey">
-                <div class="panel-heading">
-                    <h3 class="panel-title"><span class="security-name">jwt</span></h3>
-                    Type: apiKey
-                </div>
-                <div class="panel-body">                
-                    <section class="sw-security-properties">
-                        <dl>                
-                                <dt class="security-property-name">Name:</dt>
-                                <dd class="security-property-type">
-                                    <div class="row">
-                                        <div class="col-md-12"><p>Authorization</p></div>
-                                    </div>
-                                </dd>
-                                <dt class="security-property-name">In:</dt>
-                                <dd class="security-property-type">
-                                    <div class="row">
-                                        <div class="col-md-12"><p>header</p></div>
-                                    </div>
-                                </dd>
-                            <dt class="security-property-name">Description:</dt>
-                            <dd class="security-property-type">
-                                <div class="row">
-                                    <div class="col-md-12"><p><p><strong>Token URL</strong>: <a href="http://localhost:3000/login">http://localhost:3000/login</a></p>
-    <p><strong>Security Scopes</strong>:</p>
-    <ul>
-    <li><code>node:create</code>: no description</li>
-    <li><code>node:delete</code>: no description</li>
-    <li><code>node:edit</code>: no description</li>
-    <li><code>node:view</code>: no description</li>
-    </ul>
-    </p></div>
-                                </div>
-                            </dd>
-                        </dl>
-                    </section>                
-                </div>
-            </div>        
     
     <h2>Paths</h2>
     
         
-        <span id="path--login"></span>
-            <div id="operation--login-post" class="swagger--panel-operation-post panel">
+        <span id="path--parties"></span>
+            <div id="operation--parties-get" class="swagger--panel-operation-get panel">
                 <div class="panel-heading">
-                    <div class="operation-summary">login login</div>
-                    <h3 class="panel-title"><span class="operation-name">POST</span> <strong>/login</strong></h3>
+                    <div class="operation-summary">list party</div>
+                    <h3 class="panel-title"><span class="operation-name">GET</span> <strong>/parties</strong></h3>
                         Tags:
-                            <a href="#tag-login">login</a>
+                            <a href="#tag-party">party</a>
                 </div>
                 <div class="panel-body">
                     <section class="sw-operation-description">
-                        <p>Get a new JWT token</p>
-            
-                    </section>
-                    
-                    
-                        <section class="sw-responses">
-                                <p><a href="#sw-default-produces">Uses default content-types: </a>
-                                    <span class="label label-default">application/json</span> 
-                                </p>
-                            
-                            <dl>
-                                    <dt class="sw-response-204">
-                                        204 No Content
-                                    
-                                    </dt>
-                                    <dd class="sw-response-204">
-                                            <div class="row">
-                                                <div class="col-md-12">
-                                                    <p>No Content</p>
-                                            
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                
-                                                <div class="col-md-6 sw-response-model">
-                                            </div>
-                                            
-                                                    <div class="col-md-12">
-                                                        <section class="sw-response-headers">
-                                                            <table class="table">
-                                                                <thead>
-                                                                <tr>
-                                                                    <th class="sw-response-header-name"></th>
-                                                                    <th class="sw-response-header-description"></th>
-                                                                    <th class="sw-response-header-data-type"></th>
-                                                                </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                        <tr class="sw-response-header-Authorization">
-                                                                            <td>
-                                                                                Authorization
-                                                                            <td><p>The new JWT</p>
-                                                                        </td>
-                                                                            <td>
-                                                                                
-                                                                                <span class="json-property-type">string</span>
-                                                                                <span class="json-property-range" title="Value limits"></span>
-                                                                                
-                                                                            </td>
-                                                                        </tr>
-                                                                </tbody>
-                                                            </table>
-                                                        </section>
-                                                    </div>
-                                            </div>                </dd>
-                            </dl>
-                        </section>
-                        <section class="sw-request-security">
-                            <table class="table">
-                                <thead>
-                                <tr>
-                                    <th class="sw-request-security-schema"></th>
-                                    <th class="sw-request-security-scopes"></th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                        <tr>
-                                            <td><a href="#security-definition-LoginBasicAuth">LoginBasicAuth</a></td>
-                                            <td>
-                                            </td>
-                                        </tr>
-                                </tbody>
-                            </table>
-                        </section>
-                </div>
-            </div>    
-        <span id="path--nodes"></span>
-            <div id="operation--nodes-get" class="swagger--panel-operation-get panel">
-                <div class="panel-heading">
-                    <div class="operation-summary">list node</div>
-                    <h3 class="panel-title"><span class="operation-name">GET</span> <strong>/nodes</strong></h3>
-                        Tags:
-                            <a href="#tag-node">node</a>
-                </div>
-                <div class="panel-body">
-                    <section class="sw-operation-description">
-                        <p>List the nodes available to this pinbase</p>
-            <p>Required security scopes:</p>
-            <ul>
-            <li><code>node:view</code></li>
-            </ul>
+                        <p>List the parties available in this pinbase</p>
             
                     </section>
                     
@@ -270,46 +132,24 @@
                                                 <div class="col-md-6 sw-response-model">
                                                 <div  class="panel panel-definition">
                                                     <div class="panel-body">
-                                                                <a class="json-schema-ref" href="#/definitions/PinbaseNodeCollection">PinbaseNodeCollection</a>
+                                                                <a class="json-schema-ref" href="#/definitions/PinbasePartyCollection">PinbasePartyCollection</a>
                                                     </div>
                                                 </div></div>
                                             
                                             </div>                </dd>
                             </dl>
                         </section>
-                        <section class="sw-request-security">
-                            <table class="table">
-                                <thead>
-                                <tr>
-                                    <th class="sw-request-security-schema"></th>
-                                    <th class="sw-request-security-scopes"></th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                        <tr>
-                                            <td><a href="#security-definition-jwt">jwt</a></td>
-                                            <td>
-                                                    node:view
-                                            </td>
-                                        </tr>
-                                </tbody>
-                            </table>
-                        </section>
                 </div>
-            </div>    <div id="operation--nodes-post" class="swagger--panel-operation-post panel">
+            </div>    <div id="operation--parties-post" class="swagger--panel-operation-post panel">
                 <div class="panel-heading">
-                    <div class="operation-summary">create node</div>
-                    <h3 class="panel-title"><span class="operation-name">POST</span> <strong>/nodes</strong></h3>
+                    <div class="operation-summary">create party</div>
+                    <h3 class="panel-title"><span class="operation-name">POST</span> <strong>/parties</strong></h3>
                         Tags:
-                            <a href="#tag-node">node</a>
+                            <a href="#tag-party">party</a>
                 </div>
                 <div class="panel-body">
                     <section class="sw-operation-description">
-                        <p>Connect to a node</p>
-            <p>Required security scopes:</p>
-            <ul>
-            <li><code>node:create</code></li>
-            </ul>
+                        <p>Create a party</p>
             
                     </section>
                         
@@ -325,7 +165,7 @@
                                             <div class="col-md-6 sw-request-model">
                             <div  class="panel panel-definition">
                                 <div class="panel-body">
-                                            <a class="json-schema-ref" href="#/definitions/CreateNodePayload">CreateNodePayload</a>
+                                            <a class="json-schema-ref" href="#/definitions/CreatePartyPayload">CreatePartyPayload</a>
                                 </div>
                             </div></div>
                                         </div>
@@ -374,7 +214,7 @@
                                                                                 <span class="json-property-type">string</span>
                                                                                 <span class="json-property-range" title="Value limits"></span>
                                                                                 
-                                                                                    <span class="json-property-pattern" title="String pattern">, must match <span class="json-schema--regex">/nodes/.+</span>
+                                                                                    <span class="json-property-pattern" title="String pattern">, must match <span class="json-schema--regex">/parties/.+</span>
                                                                             </td>
                                                                         </tr>
                                                                 </tbody>
@@ -405,41 +245,19 @@
                                             </div>                </dd>
                             </dl>
                         </section>
-                        <section class="sw-request-security">
-                            <table class="table">
-                                <thead>
-                                <tr>
-                                    <th class="sw-request-security-schema"></th>
-                                    <th class="sw-request-security-scopes"></th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                        <tr>
-                                            <td><a href="#security-definition-jwt">jwt</a></td>
-                                            <td>
-                                                    node:create
-                                            </td>
-                                        </tr>
-                                </tbody>
-                            </table>
-                        </section>
                 </div>
             </div>    
-        <span id="path--nodes--nodeHash-"></span>
-            <div id="operation--nodes--nodeHash--delete" class="swagger--panel-operation-delete panel">
+        <span id="path--parties--partyHash-"></span>
+            <div id="operation--parties--partyHash--delete" class="swagger--panel-operation-delete panel">
                 <div class="panel-heading">
-                    <div class="operation-summary">delete node</div>
-                    <h3 class="panel-title"><span class="operation-name">DELETE</span> <strong>/nodes/{nodeHash}</strong></h3>
+                    <div class="operation-summary">delete party</div>
+                    <h3 class="panel-title"><span class="operation-name">DELETE</span> <strong>/parties/{partyHash}</strong></h3>
                         Tags:
-                            <a href="#tag-node">node</a>
+                            <a href="#tag-party">party</a>
                 </div>
                 <div class="panel-body">
                     <section class="sw-operation-description">
-                        <p>Delete a node</p>
-            <p>Required security scopes:</p>
-            <ul>
-            <li><code>node:delete</code></li>
-            </ul>
+                        <p>Delete a party</p>
             
                     </section>
                     
@@ -457,8 +275,8 @@
                                 <tbody>
                                         <tr>
                                             <td>
-                                                nodeHash
-                                            <td><p>Node Hash</p>
+                                                partyHash
+                                            <td><p>Party Hash</p>
                                         </td>
                                             <td>path</td>
                                             <td>
@@ -537,39 +355,17 @@
                                             </div>                </dd>
                             </dl>
                         </section>
-                        <section class="sw-request-security">
-                            <table class="table">
-                                <thead>
-                                <tr>
-                                    <th class="sw-request-security-schema"></th>
-                                    <th class="sw-request-security-scopes"></th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                        <tr>
-                                            <td><a href="#security-definition-jwt">jwt</a></td>
-                                            <td>
-                                                    node:delete
-                                            </td>
-                                        </tr>
-                                </tbody>
-                            </table>
-                        </section>
                 </div>
-            </div>    <div id="operation--nodes--nodeHash--get" class="swagger--panel-operation-get panel">
+            </div>    <div id="operation--parties--partyHash--get" class="swagger--panel-operation-get panel">
                 <div class="panel-heading">
-                    <div class="operation-summary">show node</div>
-                    <h3 class="panel-title"><span class="operation-name">GET</span> <strong>/nodes/{nodeHash}</strong></h3>
+                    <div class="operation-summary">show party</div>
+                    <h3 class="panel-title"><span class="operation-name">GET</span> <strong>/parties/{partyHash}</strong></h3>
                         Tags:
-                            <a href="#tag-node">node</a>
+                            <a href="#tag-party">party</a>
                 </div>
                 <div class="panel-body">
                     <section class="sw-operation-description">
-                        <p>Get node by hash</p>
-            <p>Required security scopes:</p>
-            <ul>
-            <li><code>node:view</code></li>
-            </ul>
+                        <p>Get the party by hash</p>
             
                     </section>
                     
@@ -587,8 +383,8 @@
                                 <tbody>
                                         <tr>
                                             <td>
-                                                nodeHash
-                                            <td><p>Node Hash</p>
+                                                partyHash
+                                            <td><p>Party Hash</p>
                                         </td>
                                             <td>path</td>
                                             <td>
@@ -626,7 +422,7 @@
                                                 <div class="col-md-6 sw-response-model">
                                                 <div  class="panel panel-definition">
                                                     <div class="panel-body">
-                                                                <a class="json-schema-ref" href="#/definitions/PinbaseNode">PinbaseNode</a>
+                                                                <a class="json-schema-ref" href="#/definitions/PinbaseParty">PinbaseParty</a>
                                                     </div>
                                                 </div></div>
                                             
@@ -650,39 +446,17 @@
                                             </div>                </dd>
                             </dl>
                         </section>
-                        <section class="sw-request-security">
-                            <table class="table">
-                                <thead>
-                                <tr>
-                                    <th class="sw-request-security-schema"></th>
-                                    <th class="sw-request-security-scopes"></th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                        <tr>
-                                            <td><a href="#security-definition-jwt">jwt</a></td>
-                                            <td>
-                                                    node:view
-                                            </td>
-                                        </tr>
-                                </tbody>
-                            </table>
-                        </section>
                 </div>
-            </div>    <div id="operation--nodes--nodeHash--patch" class="swagger--panel-operation-patch panel">
+            </div>    <div id="operation--parties--partyHash--patch" class="swagger--panel-operation-patch panel">
                 <div class="panel-heading">
-                    <div class="operation-summary">update node</div>
-                    <h3 class="panel-title"><span class="operation-name">PATCH</span> <strong>/nodes/{nodeHash}</strong></h3>
+                    <div class="operation-summary">update party</div>
+                    <h3 class="panel-title"><span class="operation-name">PATCH</span> <strong>/parties/{partyHash}</strong></h3>
                         Tags:
-                            <a href="#tag-node">node</a>
+                            <a href="#tag-party">party</a>
                 </div>
                 <div class="panel-body">
                     <section class="sw-operation-description">
-                        <p>Change a node&#39;s address (must be the same node-id) or description</p>
-            <p>Required security scopes:</p>
-            <ul>
-            <li><code>node:edit</code></li>
-            </ul>
+                        <p>Change a party&#39;s description</p>
             
                     </section>
                         
@@ -698,7 +472,7 @@
                                             <div class="col-md-6 sw-request-model">
                             <div  class="panel panel-definition">
                                 <div class="panel-body">
-                                            <a class="json-schema-ref" href="#/definitions/node-payload">node-payload</a>
+                                            <a class="json-schema-ref" href="#/definitions/party-payload">party-payload</a>
                                 </div>
                             </div></div>
                                         </div>
@@ -717,8 +491,8 @@
                                 <tbody>
                                         <tr>
                                             <td>
-                                                nodeHash
-                                            <td><p>Node Hash</p>
+                                                partyHash
+                                            <td><p>Party Hash</p>
                                         </td>
                                             <td>path</td>
                                             <td>
@@ -756,7 +530,7 @@
                                                 <div class="col-md-6 sw-response-model">
                                                 <div  class="panel panel-definition">
                                                     <div class="panel-body">
-                                                                <a class="json-schema-ref" href="#/definitions/PinbaseNode">PinbaseNode</a>
+                                                                <a class="json-schema-ref" href="#/definitions/PinbaseParty">PinbaseParty</a>
                                                     </div>
                                                 </div></div>
                                             
@@ -801,24 +575,6 @@
                                             </div>                </dd>
                             </dl>
                         </section>
-                        <section class="sw-request-security">
-                            <table class="table">
-                                <thead>
-                                <tr>
-                                    <th class="sw-request-security-schema"></th>
-                                    <th class="sw-request-security-scopes"></th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                        <tr>
-                                            <td><a href="#security-definition-jwt">jwt</a></td>
-                                            <td>
-                                                    node:edit
-                                            </td>
-                                        </tr>
-                                </tbody>
-                            </table>
-                        </section>
                 </div>
             </div>
      
@@ -859,9 +615,9 @@
         <h2>Schema definitions</h2>
     
             
-                <div id="definition-CreateNodePayload" class="panel panel-definition">
+                <div id="definition-CreatePartyPayload" class="panel panel-definition">
                         <div class="panel-heading">
-                                <h3 class="panel-title"><a name="/definitions/CreateNodePayload"></a>CreateNodePayload:
+                                <h3 class="panel-title"><a name="/definitions/CreatePartyPayload"></a>CreatePartyPayload:
                                     <span class="json-property-type">
                 <span class="json-property-type">object</span>
                 <span class="json-property-range" title="Value limits"></span>
@@ -871,33 +627,13 @@
                         </div>
                     <div class="panel-body">
                                 <section class="json-schema-example">
-                                    <pre><code class="lang-json">{<br>    &quot;<span class="hljs-attribute">api-url</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Et officia rerum accusamus voluptates atque reprehenderit.&quot;</span></span>,<br>    &quot;<span class="hljs-attribute">description</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Vero minus quisquam nulla veritatis atque.&quot;</span><br></span>}
+                                    <pre><code class="lang-json">{<br>    &quot;<span class="hljs-attribute">description</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Nostrum architecto repellendus molestiae et.&quot;</span></span>,<br>    &quot;<span class="hljs-attribute">hash</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Rerum accusamus voluptates atque.&quot;</span><br></span>}
                             </code></pre>
                             
                                 </section>
                             
                                     <section class="json-schema-properties">
                                         <dl>
-                                                <dt data-property-name="api-url">
-                                                    <span class="json-property-name">api-url:</span>
-                                                    
-                                                    <span class="json-property-type">string</span>
-                                                    <span class="json-property-range" title="Value limits"></span>
-                                                    
-                                                        <span class="json-property-required"></span>
-                                                </dt>
-                                                <dd>
-                                                    <p>The API URL for the node, possibly relative to the pinbase (i.e. localhost)</p>
-                                    
-                                                    <div class="json-inner-schema">
-                                                            <section class="json-schema-example">
-                                                                <pre><code class="lang-json"><span class="hljs-string">&quot;Et officia rerum accusamus voluptates atque reprehenderit.&quot;</span>
-                                                        </code></pre>
-                                                        
-                                                            </section>
-                                                        
-                                                    </div>
-                                                </dd>
                                                 <dt data-property-name="description">
                                                     <span class="json-property-name">description:</span>
                                                     
@@ -907,11 +643,31 @@
                                                         <span class="json-property-required"></span>
                                                 </dt>
                                                 <dd>
-                                                    <p>A helpful description of the node</p>
+                                                    <p>A helpful description of the party</p>
                                     
                                                     <div class="json-inner-schema">
                                                             <section class="json-schema-example">
-                                                                <pre><code class="lang-json"><span class="hljs-string">&quot;Vero minus quisquam nulla veritatis atque.&quot;</span>
+                                                                <pre><code class="lang-json"><span class="hljs-string">&quot;Nostrum architecto repellendus molestiae et.&quot;</span>
+                                                        </code></pre>
+                                                        
+                                                            </section>
+                                                        
+                                                    </div>
+                                                </dd>
+                                                <dt data-property-name="hash">
+                                                    <span class="json-property-name">hash:</span>
+                                                    
+                                                    <span class="json-property-type">string</span>
+                                                    <span class="json-property-range" title="Value limits"></span>
+                                                    
+                                                        <span class="json-property-required"></span>
+                                                </dt>
+                                                <dd>
+                                                    <p>The hash of the object describing the party</p>
+                                    
+                                                    <div class="json-inner-schema">
+                                                            <section class="json-schema-example">
+                                                                <pre><code class="lang-json"><span class="hljs-string">&quot;Rerum accusamus voluptates atque.&quot;</span>
                                                         </code></pre>
                                                         
                                                             </section>
@@ -1052,9 +808,9 @@
                                     </section>
                     </div>
                 </div>        
-                <div id="definition-node-payload" class="panel panel-definition">
+                <div id="definition-party-payload" class="panel panel-definition">
                         <div class="panel-heading">
-                                <h3 class="panel-title"><a name="/definitions/node-payload"></a>node-payload:
+                                <h3 class="panel-title"><a name="/definitions/party-payload"></a>party-payload:
                                     <span class="json-property-type">
                 <span class="json-property-type">object</span>
                 <span class="json-property-range" title="Value limits"></span>
@@ -1064,32 +820,13 @@
                         </div>
                     <div class="panel-body">
                                 <section class="json-schema-example">
-                                    <pre><code class="lang-json">{<br>    &quot;<span class="hljs-attribute">api-url</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Et officia rerum accusamus voluptates atque reprehenderit.&quot;</span></span>,<br>    &quot;<span class="hljs-attribute">description</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Vero minus quisquam nulla veritatis atque.&quot;</span><br></span>}
+                                    <pre><code class="lang-json">{<br>    &quot;<span class="hljs-attribute">description</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Nostrum architecto repellendus molestiae et.&quot;</span></span>,<br>    &quot;<span class="hljs-attribute">hash</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Rerum accusamus voluptates atque.&quot;</span><br></span>}
                             </code></pre>
                             
                                 </section>
                             
                                     <section class="json-schema-properties">
                                         <dl>
-                                                <dt data-property-name="api-url">
-                                                    <span class="json-property-name">api-url:</span>
-                                                    
-                                                    <span class="json-property-type">string</span>
-                                                    <span class="json-property-range" title="Value limits"></span>
-                                                    
-                                                </dt>
-                                                <dd>
-                                                    <p>The API URL for the node, possibly relative to the pinbase (i.e. localhost)</p>
-                                    
-                                                    <div class="json-inner-schema">
-                                                            <section class="json-schema-example">
-                                                                <pre><code class="lang-json"><span class="hljs-string">&quot;Et officia rerum accusamus voluptates atque reprehenderit.&quot;</span>
-                                                        </code></pre>
-                                                        
-                                                            </section>
-                                                        
-                                                    </div>
-                                                </dd>
                                                 <dt data-property-name="description">
                                                     <span class="json-property-name">description:</span>
                                                     
@@ -1098,11 +835,30 @@
                                                     
                                                 </dt>
                                                 <dd>
-                                                    <p>A helpful description of the node</p>
+                                                    <p>A helpful description of the party</p>
                                     
                                                     <div class="json-inner-schema">
                                                             <section class="json-schema-example">
-                                                                <pre><code class="lang-json"><span class="hljs-string">&quot;Vero minus quisquam nulla veritatis atque.&quot;</span>
+                                                                <pre><code class="lang-json"><span class="hljs-string">&quot;Nostrum architecto repellendus molestiae et.&quot;</span>
+                                                        </code></pre>
+                                                        
+                                                            </section>
+                                                        
+                                                    </div>
+                                                </dd>
+                                                <dt data-property-name="hash">
+                                                    <span class="json-property-name">hash:</span>
+                                                    
+                                                    <span class="json-property-type">string</span>
+                                                    <span class="json-property-range" title="Value limits"></span>
+                                                    
+                                                </dt>
+                                                <dd>
+                                                    <p>The hash of the object describing the party</p>
+                                    
+                                                    <div class="json-inner-schema">
+                                                            <section class="json-schema-example">
+                                                                <pre><code class="lang-json"><span class="hljs-string">&quot;Rerum accusamus voluptates atque.&quot;</span>
                                                         </code></pre>
                                                         
                                                             </section>
@@ -1113,9 +869,9 @@
                                     </section>
                     </div>
                 </div>        
-                <div id="definition-PinbaseNode" class="panel panel-definition">
+                <div id="definition-PinbaseParty" class="panel panel-definition">
                         <div class="panel-heading">
-                                <h3 class="panel-title"><a name="/definitions/PinbaseNode"></a>PinbaseNode:
+                                <h3 class="panel-title"><a name="/definitions/PinbaseParty"></a>PinbaseParty:
                                     <span class="json-property-type">
                 <span class="json-property-type">object</span>
                 <span class="json-property-range" title="Value limits"></span>
@@ -1125,37 +881,17 @@
                         </div>
                     <div class="panel-body">
                                 <section class="json-schema-description">
-                                    <p>An IPFS node (default view)</p>
+                                    <p>A Pinbase Party (default view)</p>
                             
                                 </section>
                                 <section class="json-schema-example">
-                                    <pre><code class="lang-json">{<br>    &quot;<span class="hljs-attribute">api-url</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Ut provident ratione doloribus id consequuntur.&quot;</span></span>,<br>    &quot;<span class="hljs-attribute">description</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Reiciendis necessitatibus dolor magnam voluptates.&quot;</span></span>,<br>    &quot;<span class="hljs-attribute">hash</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Iusto nostrum architecto.&quot;</span><br></span>}
+                                    <pre><code class="lang-json">{<br>    &quot;<span class="hljs-attribute">description</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Ut provident ratione doloribus id consequuntur.&quot;</span></span>,<br>    &quot;<span class="hljs-attribute">hash</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Reiciendis necessitatibus dolor magnam voluptates.&quot;</span><br></span>}
                             </code></pre>
                             
                                 </section>
                             
                                     <section class="json-schema-properties">
                                         <dl>
-                                                <dt data-property-name="api-url">
-                                                    <span class="json-property-name">api-url:</span>
-                                                    
-                                                    <span class="json-property-type">string</span>
-                                                    <span class="json-property-range" title="Value limits"></span>
-                                                    
-                                                        <span class="json-property-required"></span>
-                                                </dt>
-                                                <dd>
-                                                    <p>The API URL for the node, possibly relative to the pinbase (i.e. localhost)</p>
-                                    
-                                                    <div class="json-inner-schema">
-                                                            <section class="json-schema-example">
-                                                                <pre><code class="lang-json"><span class="hljs-string">&quot;Ut provident ratione doloribus id consequuntur.&quot;</span>
-                                                        </code></pre>
-                                                        
-                                                            </section>
-                                                        
-                                                    </div>
-                                                </dd>
                                                 <dt data-property-name="description">
                                                     <span class="json-property-name">description:</span>
                                                     
@@ -1165,11 +901,11 @@
                                                         <span class="json-property-required"></span>
                                                 </dt>
                                                 <dd>
-                                                    <p>A helpful description of the node</p>
+                                                    <p>A helpful description of the party</p>
                                     
                                                     <div class="json-inner-schema">
                                                             <section class="json-schema-example">
-                                                                <pre><code class="lang-json"><span class="hljs-string">&quot;Reiciendis necessitatibus dolor magnam voluptates.&quot;</span>
+                                                                <pre><code class="lang-json"><span class="hljs-string">&quot;Ut provident ratione doloribus id consequuntur.&quot;</span>
                                                         </code></pre>
                                                         
                                                             </section>
@@ -1185,11 +921,11 @@
                                                         <span class="json-property-required"></span>
                                                 </dt>
                                                 <dd>
-                                                    <p>The nodes&#39; unique hash</p>
+                                                    <p>The hash of the object describing the party</p>
                                     
                                                     <div class="json-inner-schema">
                                                             <section class="json-schema-example">
-                                                                <pre><code class="lang-json"><span class="hljs-string">&quot;Iusto nostrum architecto.&quot;</span>
+                                                                <pre><code class="lang-json"><span class="hljs-string">&quot;Reiciendis necessitatibus dolor magnam voluptates.&quot;</span>
                                                         </code></pre>
                                                         
                                                             </section>
@@ -1200,9 +936,9 @@
                                     </section>
                     </div>
                 </div>        
-                <div id="definition-PinbaseNodeCollection" class="panel panel-definition">
+                <div id="definition-PinbasePartyCollection" class="panel panel-definition">
                         <div class="panel-heading">
-                                <h3 class="panel-title"><a name="/definitions/PinbaseNodeCollection"></a>PinbaseNodeCollection:
+                                <h3 class="panel-title"><a name="/definitions/PinbasePartyCollection"></a>PinbasePartyCollection:
                                     <span class="json-property-type">
                 <span class="json-property-type">object[]</span>
                 <span class="json-property-range" title="Value limits"></span>
@@ -1212,18 +948,18 @@
                         </div>
                     <div class="panel-body">
                                 <section class="json-schema-description">
-                                    <p>PinbaseNodeCollection is the media type for an array of PinbaseNode (default view)</p>
+                                    <p>PinbasePartyCollection is the media type for an array of PinbaseParty (default view)</p>
                             
                                 </section>
                                 <section class="json-schema-example">
-                                    <pre><code class="lang-json">[<br>    {<br>        &quot;<span class="hljs-attribute">api-url</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Ut provident ratione doloribus id consequuntur.&quot;</span></span>,<br>        &quot;<span class="hljs-attribute">description</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Reiciendis necessitatibus dolor magnam voluptates.&quot;</span></span>,<br>        &quot;<span class="hljs-attribute">hash</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Iusto nostrum architecto.&quot;</span><br>    </span>},<br>    {<br>        &quot;<span class="hljs-attribute">api-url</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Ut provident ratione doloribus id consequuntur.&quot;</span></span>,<br>        &quot;<span class="hljs-attribute">description</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Reiciendis necessitatibus dolor magnam voluptates.&quot;</span></span>,<br>        &quot;<span class="hljs-attribute">hash</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Iusto nostrum architecto.&quot;</span><br>    </span>}<br>]
+                                    <pre><code class="lang-json">[<br>    {<br>        &quot;<span class="hljs-attribute">description</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Ut provident ratione doloribus id consequuntur.&quot;</span></span>,<br>        &quot;<span class="hljs-attribute">hash</span>&quot;: <span class="hljs-value"><span class="hljs-string">&quot;Reiciendis necessitatibus dolor magnam voluptates.&quot;</span><br>    </span>}<br>]
                             </code></pre>
                             
                                 </section>
                             
                                             <section class="json-schema-array-items">
                                                 
-                                                <span class="json-property-type">    <a class="json-schema-ref" href="#/definitions/PinbaseNode">PinbaseNode</a>
+                                                <span class="json-property-type">    <a class="json-schema-ref" href="#/definitions/PinbaseParty">PinbaseParty</a>
                                                 </span>
                                                 <span class="json-property-range" title="Value limits"></span>
                                                 

@@ -10,30 +10,30 @@
 
 package client
 
-// nodePayload user type.
-type nodePayload struct {
-	// The API URL for the node, possibly relative to the pinbase (i.e. localhost)
-	APIURL *string `form:"api-url,omitempty" json:"api-url,omitempty" xml:"api-url,omitempty"`
-	// A helpful description of the node
+// partyPayload user type.
+type partyPayload struct {
+	// A helpful description of the party
 	Description *string `form:"description,omitempty" json:"description,omitempty" xml:"description,omitempty"`
+	// The hash of the object describing the party
+	Hash *string `form:"hash,omitempty" json:"hash,omitempty" xml:"hash,omitempty"`
 }
 
-// Publicize creates NodePayload from nodePayload
-func (ut *nodePayload) Publicize() *NodePayload {
-	var pub NodePayload
-	if ut.APIURL != nil {
-		pub.APIURL = ut.APIURL
-	}
+// Publicize creates PartyPayload from partyPayload
+func (ut *partyPayload) Publicize() *PartyPayload {
+	var pub PartyPayload
 	if ut.Description != nil {
 		pub.Description = ut.Description
+	}
+	if ut.Hash != nil {
+		pub.Hash = ut.Hash
 	}
 	return &pub
 }
 
-// NodePayload user type.
-type NodePayload struct {
-	// The API URL for the node, possibly relative to the pinbase (i.e. localhost)
-	APIURL *string `form:"api-url,omitempty" json:"api-url,omitempty" xml:"api-url,omitempty"`
-	// A helpful description of the node
+// PartyPayload user type.
+type PartyPayload struct {
+	// A helpful description of the party
 	Description *string `form:"description,omitempty" json:"description,omitempty" xml:"description,omitempty"`
+	// The hash of the object describing the party
+	Hash *string `form:"hash,omitempty" json:"hash,omitempty" xml:"hash,omitempty"`
 }

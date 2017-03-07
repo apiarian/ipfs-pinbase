@@ -28,43 +28,38 @@ import (
 )
 
 type (
-	// LoginLoginCommand is the command line data structure for the login action of login
-	LoginLoginCommand struct {
-		PrettyPrint bool
-	}
-
-	// CreateNodeCommand is the command line data structure for the create action of node
-	CreateNodeCommand struct {
+	// CreatePartyCommand is the command line data structure for the create action of party
+	CreatePartyCommand struct {
 		Payload     string
 		ContentType string
 		PrettyPrint bool
 	}
 
-	// DeleteNodeCommand is the command line data structure for the delete action of node
-	DeleteNodeCommand struct {
-		// Node Hash
-		NodeHash    string
+	// DeletePartyCommand is the command line data structure for the delete action of party
+	DeletePartyCommand struct {
+		// Party Hash
+		PartyHash   string
 		PrettyPrint bool
 	}
 
-	// ListNodeCommand is the command line data structure for the list action of node
-	ListNodeCommand struct {
+	// ListPartyCommand is the command line data structure for the list action of party
+	ListPartyCommand struct {
 		PrettyPrint bool
 	}
 
-	// ShowNodeCommand is the command line data structure for the show action of node
-	ShowNodeCommand struct {
-		// Node Hash
-		NodeHash    string
+	// ShowPartyCommand is the command line data structure for the show action of party
+	ShowPartyCommand struct {
+		// Party Hash
+		PartyHash   string
 		PrettyPrint bool
 	}
 
-	// UpdateNodeCommand is the command line data structure for the update action of node
-	UpdateNodeCommand struct {
+	// UpdatePartyCommand is the command line data structure for the update action of party
+	UpdatePartyCommand struct {
 		Payload     string
 		ContentType string
-		// Node Hash
-		NodeHash    string
+		// Party Hash
+		PartyHash   string
 		PrettyPrint bool
 	}
 )
@@ -74,19 +69,19 @@ func RegisterCommands(app *cobra.Command, c *client.Client) {
 	var command, sub *cobra.Command
 	command = &cobra.Command{
 		Use:   "create",
-		Short: `Connect to a node`,
+		Short: `Create a party`,
 	}
-	tmp1 := new(CreateNodeCommand)
+	tmp1 := new(CreatePartyCommand)
 	sub = &cobra.Command{
-		Use:   `node ["/nodes"]`,
-		Short: `The IPFS node resrouce`,
-		Long: `The IPFS node resrouce
+		Use:   `party ["/api/parties"]`,
+		Short: `The Pinbase Party resource`,
+		Long: `The Pinbase Party resource
 
 Payload example:
 
 {
-   "api-url": "Et officia rerum accusamus voluptates atque reprehenderit.",
-   "description": "Vero minus quisquam nulla veritatis atque."
+   "description": "Nostrum architecto repellendus molestiae et.",
+   "hash": "Rerum accusamus voluptates atque."
 }`,
 		RunE: func(cmd *cobra.Command, args []string) error { return tmp1.Run(c, args) },
 	}
@@ -96,12 +91,12 @@ Payload example:
 	app.AddCommand(command)
 	command = &cobra.Command{
 		Use:   "delete",
-		Short: `Delete a node`,
+		Short: `Delete a party`,
 	}
-	tmp2 := new(DeleteNodeCommand)
+	tmp2 := new(DeletePartyCommand)
 	sub = &cobra.Command{
-		Use:   `node ["/nodes/NODEHASH"]`,
-		Short: `The IPFS node resrouce`,
+		Use:   `party ["/api/parties/PARTYHASH"]`,
+		Short: `The Pinbase Party resource`,
 		RunE:  func(cmd *cobra.Command, args []string) error { return tmp2.Run(c, args) },
 	}
 	tmp2.RegisterFlags(sub, c)
@@ -110,12 +105,12 @@ Payload example:
 	app.AddCommand(command)
 	command = &cobra.Command{
 		Use:   "list",
-		Short: `List the nodes available to this pinbase`,
+		Short: `List the parties available in this pinbase`,
 	}
-	tmp3 := new(ListNodeCommand)
+	tmp3 := new(ListPartyCommand)
 	sub = &cobra.Command{
-		Use:   `node ["/nodes"]`,
-		Short: `The IPFS node resrouce`,
+		Use:   `party ["/api/parties"]`,
+		Short: `The Pinbase Party resource`,
 		RunE:  func(cmd *cobra.Command, args []string) error { return tmp3.Run(c, args) },
 	}
 	tmp3.RegisterFlags(sub, c)
@@ -123,13 +118,13 @@ Payload example:
 	command.AddCommand(sub)
 	app.AddCommand(command)
 	command = &cobra.Command{
-		Use:   "login",
-		Short: `Get a new JWT token`,
+		Use:   "show",
+		Short: `Get the party by hash`,
 	}
-	tmp4 := new(LoginLoginCommand)
+	tmp4 := new(ShowPartyCommand)
 	sub = &cobra.Command{
-		Use:   `login ["/login"]`,
-		Short: `The login resrouce to obtain a token`,
+		Use:   `party ["/api/parties/PARTYHASH"]`,
+		Short: `The Pinbase Party resource`,
 		RunE:  func(cmd *cobra.Command, args []string) error { return tmp4.Run(c, args) },
 	}
 	tmp4.RegisterFlags(sub, c)
@@ -137,39 +132,25 @@ Payload example:
 	command.AddCommand(sub)
 	app.AddCommand(command)
 	command = &cobra.Command{
-		Use:   "show",
-		Short: `Get node by hash`,
-	}
-	tmp5 := new(ShowNodeCommand)
-	sub = &cobra.Command{
-		Use:   `node ["/nodes/NODEHASH"]`,
-		Short: `The IPFS node resrouce`,
-		RunE:  func(cmd *cobra.Command, args []string) error { return tmp5.Run(c, args) },
-	}
-	tmp5.RegisterFlags(sub, c)
-	sub.PersistentFlags().BoolVar(&tmp5.PrettyPrint, "pp", false, "Pretty print response body")
-	command.AddCommand(sub)
-	app.AddCommand(command)
-	command = &cobra.Command{
 		Use:   "update",
-		Short: `Change a node's address (must be the same node-id) or description`,
+		Short: `Change a party's description`,
 	}
-	tmp6 := new(UpdateNodeCommand)
+	tmp5 := new(UpdatePartyCommand)
 	sub = &cobra.Command{
-		Use:   `node ["/nodes/NODEHASH"]`,
-		Short: `The IPFS node resrouce`,
-		Long: `The IPFS node resrouce
+		Use:   `party ["/api/parties/PARTYHASH"]`,
+		Short: `The Pinbase Party resource`,
+		Long: `The Pinbase Party resource
 
 Payload example:
 
 {
-   "api-url": "Et officia rerum accusamus voluptates atque reprehenderit.",
-   "description": "Vero minus quisquam nulla veritatis atque."
+   "description": "Nostrum architecto repellendus molestiae et.",
+   "hash": "Rerum accusamus voluptates atque."
 }`,
-		RunE: func(cmd *cobra.Command, args []string) error { return tmp6.Run(c, args) },
+		RunE: func(cmd *cobra.Command, args []string) error { return tmp5.Run(c, args) },
 	}
-	tmp6.RegisterFlags(sub, c)
-	sub.PersistentFlags().BoolVar(&tmp6.PrettyPrint, "pp", false, "Pretty print response body")
+	tmp5.RegisterFlags(sub, c)
+	sub.PersistentFlags().BoolVar(&tmp5.PrettyPrint, "pp", false, "Pretty print response body")
 	command.AddCommand(sub)
 	app.AddCommand(command)
 }
@@ -327,39 +308,15 @@ func boolArray(ins []string) ([]bool, error) {
 	return vals, nil
 }
 
-// Run makes the HTTP request corresponding to the LoginLoginCommand command.
-func (cmd *LoginLoginCommand) Run(c *client.Client, args []string) error {
+// Run makes the HTTP request corresponding to the CreatePartyCommand command.
+func (cmd *CreatePartyCommand) Run(c *client.Client, args []string) error {
 	var path string
 	if len(args) > 0 {
 		path = args[0]
 	} else {
-		path = "/login"
+		path = "/api/parties"
 	}
-	logger := goa.NewLogger(log.New(os.Stderr, "", log.LstdFlags))
-	ctx := goa.WithLogger(context.Background(), logger)
-	resp, err := c.LoginLogin(ctx, path)
-	if err != nil {
-		goa.LogError(ctx, "failed", "err", err)
-		return err
-	}
-
-	goaclient.HandleResponse(c.Client, resp, cmd.PrettyPrint)
-	return nil
-}
-
-// RegisterFlags registers the command flags with the command line.
-func (cmd *LoginLoginCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
-}
-
-// Run makes the HTTP request corresponding to the CreateNodeCommand command.
-func (cmd *CreateNodeCommand) Run(c *client.Client, args []string) error {
-	var path string
-	if len(args) > 0 {
-		path = args[0]
-	} else {
-		path = "/nodes"
-	}
-	var payload client.CreateNodePayload
+	var payload client.CreatePartyPayload
 	if cmd.Payload != "" {
 		err := json.Unmarshal([]byte(cmd.Payload), &payload)
 		if err != nil {
@@ -368,7 +325,7 @@ func (cmd *CreateNodeCommand) Run(c *client.Client, args []string) error {
 	}
 	logger := goa.NewLogger(log.New(os.Stderr, "", log.LstdFlags))
 	ctx := goa.WithLogger(context.Background(), logger)
-	resp, err := c.CreateNode(ctx, path, &payload)
+	resp, err := c.CreateParty(ctx, path, &payload)
 	if err != nil {
 		goa.LogError(ctx, "failed", "err", err)
 		return err
@@ -379,22 +336,22 @@ func (cmd *CreateNodeCommand) Run(c *client.Client, args []string) error {
 }
 
 // RegisterFlags registers the command flags with the command line.
-func (cmd *CreateNodeCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
+func (cmd *CreatePartyCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
 	cc.Flags().StringVar(&cmd.Payload, "payload", "", "Request body encoded in JSON")
 	cc.Flags().StringVar(&cmd.ContentType, "content", "", "Request content type override, e.g. 'application/x-www-form-urlencoded'")
 }
 
-// Run makes the HTTP request corresponding to the DeleteNodeCommand command.
-func (cmd *DeleteNodeCommand) Run(c *client.Client, args []string) error {
+// Run makes the HTTP request corresponding to the DeletePartyCommand command.
+func (cmd *DeletePartyCommand) Run(c *client.Client, args []string) error {
 	var path string
 	if len(args) > 0 {
 		path = args[0]
 	} else {
-		path = fmt.Sprintf("/nodes/%v", url.QueryEscape(cmd.NodeHash))
+		path = fmt.Sprintf("/api/parties/%v", url.QueryEscape(cmd.PartyHash))
 	}
 	logger := goa.NewLogger(log.New(os.Stderr, "", log.LstdFlags))
 	ctx := goa.WithLogger(context.Background(), logger)
-	resp, err := c.DeleteNode(ctx, path)
+	resp, err := c.DeleteParty(ctx, path)
 	if err != nil {
 		goa.LogError(ctx, "failed", "err", err)
 		return err
@@ -405,22 +362,22 @@ func (cmd *DeleteNodeCommand) Run(c *client.Client, args []string) error {
 }
 
 // RegisterFlags registers the command flags with the command line.
-func (cmd *DeleteNodeCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
-	var nodeHash string
-	cc.Flags().StringVar(&cmd.NodeHash, "nodeHash", nodeHash, `Node Hash`)
+func (cmd *DeletePartyCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
+	var partyHash string
+	cc.Flags().StringVar(&cmd.PartyHash, "partyHash", partyHash, `Party Hash`)
 }
 
-// Run makes the HTTP request corresponding to the ListNodeCommand command.
-func (cmd *ListNodeCommand) Run(c *client.Client, args []string) error {
+// Run makes the HTTP request corresponding to the ListPartyCommand command.
+func (cmd *ListPartyCommand) Run(c *client.Client, args []string) error {
 	var path string
 	if len(args) > 0 {
 		path = args[0]
 	} else {
-		path = "/nodes"
+		path = "/api/parties"
 	}
 	logger := goa.NewLogger(log.New(os.Stderr, "", log.LstdFlags))
 	ctx := goa.WithLogger(context.Background(), logger)
-	resp, err := c.ListNode(ctx, path)
+	resp, err := c.ListParty(ctx, path)
 	if err != nil {
 		goa.LogError(ctx, "failed", "err", err)
 		return err
@@ -431,20 +388,20 @@ func (cmd *ListNodeCommand) Run(c *client.Client, args []string) error {
 }
 
 // RegisterFlags registers the command flags with the command line.
-func (cmd *ListNodeCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
+func (cmd *ListPartyCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
 }
 
-// Run makes the HTTP request corresponding to the ShowNodeCommand command.
-func (cmd *ShowNodeCommand) Run(c *client.Client, args []string) error {
+// Run makes the HTTP request corresponding to the ShowPartyCommand command.
+func (cmd *ShowPartyCommand) Run(c *client.Client, args []string) error {
 	var path string
 	if len(args) > 0 {
 		path = args[0]
 	} else {
-		path = fmt.Sprintf("/nodes/%v", url.QueryEscape(cmd.NodeHash))
+		path = fmt.Sprintf("/api/parties/%v", url.QueryEscape(cmd.PartyHash))
 	}
 	logger := goa.NewLogger(log.New(os.Stderr, "", log.LstdFlags))
 	ctx := goa.WithLogger(context.Background(), logger)
-	resp, err := c.ShowNode(ctx, path)
+	resp, err := c.ShowParty(ctx, path)
 	if err != nil {
 		goa.LogError(ctx, "failed", "err", err)
 		return err
@@ -455,20 +412,20 @@ func (cmd *ShowNodeCommand) Run(c *client.Client, args []string) error {
 }
 
 // RegisterFlags registers the command flags with the command line.
-func (cmd *ShowNodeCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
-	var nodeHash string
-	cc.Flags().StringVar(&cmd.NodeHash, "nodeHash", nodeHash, `Node Hash`)
+func (cmd *ShowPartyCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
+	var partyHash string
+	cc.Flags().StringVar(&cmd.PartyHash, "partyHash", partyHash, `Party Hash`)
 }
 
-// Run makes the HTTP request corresponding to the UpdateNodeCommand command.
-func (cmd *UpdateNodeCommand) Run(c *client.Client, args []string) error {
+// Run makes the HTTP request corresponding to the UpdatePartyCommand command.
+func (cmd *UpdatePartyCommand) Run(c *client.Client, args []string) error {
 	var path string
 	if len(args) > 0 {
 		path = args[0]
 	} else {
-		path = fmt.Sprintf("/nodes/%v", url.QueryEscape(cmd.NodeHash))
+		path = fmt.Sprintf("/api/parties/%v", url.QueryEscape(cmd.PartyHash))
 	}
-	var payload client.NodePayload
+	var payload client.PartyPayload
 	if cmd.Payload != "" {
 		err := json.Unmarshal([]byte(cmd.Payload), &payload)
 		if err != nil {
@@ -477,7 +434,7 @@ func (cmd *UpdateNodeCommand) Run(c *client.Client, args []string) error {
 	}
 	logger := goa.NewLogger(log.New(os.Stderr, "", log.LstdFlags))
 	ctx := goa.WithLogger(context.Background(), logger)
-	resp, err := c.UpdateNode(ctx, path, &payload)
+	resp, err := c.UpdateParty(ctx, path, &payload)
 	if err != nil {
 		goa.LogError(ctx, "failed", "err", err)
 		return err
@@ -488,9 +445,9 @@ func (cmd *UpdateNodeCommand) Run(c *client.Client, args []string) error {
 }
 
 // RegisterFlags registers the command flags with the command line.
-func (cmd *UpdateNodeCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
+func (cmd *UpdatePartyCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
 	cc.Flags().StringVar(&cmd.Payload, "payload", "", "Request body encoded in JSON")
 	cc.Flags().StringVar(&cmd.ContentType, "content", "", "Request content type override, e.g. 'application/x-www-form-urlencoded'")
-	var nodeHash string
-	cc.Flags().StringVar(&cmd.NodeHash, "nodeHash", nodeHash, `Node Hash`)
+	var partyHash string
+	cc.Flags().StringVar(&cmd.PartyHash, "partyHash", partyHash, `Party Hash`)
 }

@@ -4,7 +4,7 @@
 // --out=$(GOPATH)/src/github.com/apiarian/ipfs-pinbase/cmd/ipfs-pinbase
 // --version=v1.1.0-dirty
 //
-// API "pinbase": node TestHelpers
+// API "pinbase": party TestHelpers
 //
 // The content of this file is auto-generated, DO NOT MODIFY
 
@@ -24,11 +24,11 @@ import (
 	"net/url"
 )
 
-// CreateNodeBadRequest runs the method Create of the given controller with the given parameters and payload.
+// CreatePartyBadRequest runs the method Create of the given controller with the given parameters and payload.
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func CreateNodeBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.NodeController, payload *app.CreateNodePayload) (http.ResponseWriter, error) {
+func CreatePartyBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.PartyController, payload *app.CreatePartyPayload) (http.ResponseWriter, error) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -59,7 +59,7 @@ func CreateNodeBadRequest(t goatest.TInterface, ctx context.Context, service *go
 	// Setup request context
 	rw := httptest.NewRecorder()
 	u := &url.URL{
-		Path: fmt.Sprintf("/nodes"),
+		Path: fmt.Sprintf("/api/parties"),
 	}
 	req, err := http.NewRequest("POST", u.String(), nil)
 	if err != nil {
@@ -69,8 +69,8 @@ func CreateNodeBadRequest(t goatest.TInterface, ctx context.Context, service *go
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	goaCtx := goa.NewContext(goa.WithAction(ctx, "NodeTest"), rw, req, prms)
-	createCtx, err := app.NewCreateNodeContext(goaCtx, service)
+	goaCtx := goa.NewContext(goa.WithAction(ctx, "PartyTest"), rw, req, prms)
+	createCtx, err := app.NewCreatePartyContext(goaCtx, service)
 	if err != nil {
 		panic("invalid test data " + err.Error()) // bug
 	}
@@ -99,11 +99,11 @@ func CreateNodeBadRequest(t goatest.TInterface, ctx context.Context, service *go
 	return rw, mt
 }
 
-// CreateNodeCreated runs the method Create of the given controller with the given parameters and payload.
+// CreatePartyCreated runs the method Create of the given controller with the given parameters and payload.
 // It returns the response writer so it's possible to inspect the response headers.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func CreateNodeCreated(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.NodeController, payload *app.CreateNodePayload) http.ResponseWriter {
+func CreatePartyCreated(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.PartyController, payload *app.CreatePartyPayload) http.ResponseWriter {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -135,7 +135,7 @@ func CreateNodeCreated(t goatest.TInterface, ctx context.Context, service *goa.S
 	// Setup request context
 	rw := httptest.NewRecorder()
 	u := &url.URL{
-		Path: fmt.Sprintf("/nodes"),
+		Path: fmt.Sprintf("/api/parties"),
 	}
 	req, err := http.NewRequest("POST", u.String(), nil)
 	if err != nil {
@@ -145,8 +145,8 @@ func CreateNodeCreated(t goatest.TInterface, ctx context.Context, service *goa.S
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	goaCtx := goa.NewContext(goa.WithAction(ctx, "NodeTest"), rw, req, prms)
-	createCtx, err := app.NewCreateNodeContext(goaCtx, service)
+	goaCtx := goa.NewContext(goa.WithAction(ctx, "PartyTest"), rw, req, prms)
+	createCtx, err := app.NewCreatePartyContext(goaCtx, service)
 	if err != nil {
 		panic("invalid test data " + err.Error()) // bug
 	}
@@ -167,11 +167,11 @@ func CreateNodeCreated(t goatest.TInterface, ctx context.Context, service *goa.S
 	return rw
 }
 
-// DeleteNodeBadRequest runs the method Delete of the given controller with the given parameters.
+// DeletePartyBadRequest runs the method Delete of the given controller with the given parameters.
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func DeleteNodeBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.NodeController, nodeHash string) (http.ResponseWriter, error) {
+func DeletePartyBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.PartyController, partyHash string) (http.ResponseWriter, error) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -192,19 +192,19 @@ func DeleteNodeBadRequest(t goatest.TInterface, ctx context.Context, service *go
 	// Setup request context
 	rw := httptest.NewRecorder()
 	u := &url.URL{
-		Path: fmt.Sprintf("/nodes/%v", nodeHash),
+		Path: fmt.Sprintf("/api/parties/%v", partyHash),
 	}
 	req, err := http.NewRequest("DELETE", u.String(), nil)
 	if err != nil {
 		panic("invalid test " + err.Error()) // bug
 	}
 	prms := url.Values{}
-	prms["nodeHash"] = []string{fmt.Sprintf("%v", nodeHash)}
+	prms["partyHash"] = []string{fmt.Sprintf("%v", partyHash)}
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	goaCtx := goa.NewContext(goa.WithAction(ctx, "NodeTest"), rw, req, prms)
-	deleteCtx, err := app.NewDeleteNodeContext(goaCtx, service)
+	goaCtx := goa.NewContext(goa.WithAction(ctx, "PartyTest"), rw, req, prms)
+	deleteCtx, err := app.NewDeletePartyContext(goaCtx, service)
 	if err != nil {
 		panic("invalid test data " + err.Error()) // bug
 	}
@@ -232,11 +232,11 @@ func DeleteNodeBadRequest(t goatest.TInterface, ctx context.Context, service *go
 	return rw, mt
 }
 
-// DeleteNodeNoContent runs the method Delete of the given controller with the given parameters.
+// DeletePartyNoContent runs the method Delete of the given controller with the given parameters.
 // It returns the response writer so it's possible to inspect the response headers.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func DeleteNodeNoContent(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.NodeController, nodeHash string) http.ResponseWriter {
+func DeletePartyNoContent(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.PartyController, partyHash string) http.ResponseWriter {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -257,19 +257,19 @@ func DeleteNodeNoContent(t goatest.TInterface, ctx context.Context, service *goa
 	// Setup request context
 	rw := httptest.NewRecorder()
 	u := &url.URL{
-		Path: fmt.Sprintf("/nodes/%v", nodeHash),
+		Path: fmt.Sprintf("/api/parties/%v", partyHash),
 	}
 	req, err := http.NewRequest("DELETE", u.String(), nil)
 	if err != nil {
 		panic("invalid test " + err.Error()) // bug
 	}
 	prms := url.Values{}
-	prms["nodeHash"] = []string{fmt.Sprintf("%v", nodeHash)}
+	prms["partyHash"] = []string{fmt.Sprintf("%v", partyHash)}
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	goaCtx := goa.NewContext(goa.WithAction(ctx, "NodeTest"), rw, req, prms)
-	deleteCtx, err := app.NewDeleteNodeContext(goaCtx, service)
+	goaCtx := goa.NewContext(goa.WithAction(ctx, "PartyTest"), rw, req, prms)
+	deleteCtx, err := app.NewDeletePartyContext(goaCtx, service)
 	if err != nil {
 		panic("invalid test data " + err.Error()) // bug
 	}
@@ -289,11 +289,11 @@ func DeleteNodeNoContent(t goatest.TInterface, ctx context.Context, service *goa
 	return rw
 }
 
-// DeleteNodeNotFound runs the method Delete of the given controller with the given parameters.
+// DeletePartyNotFound runs the method Delete of the given controller with the given parameters.
 // It returns the response writer so it's possible to inspect the response headers.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func DeleteNodeNotFound(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.NodeController, nodeHash string) http.ResponseWriter {
+func DeletePartyNotFound(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.PartyController, partyHash string) http.ResponseWriter {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -314,19 +314,19 @@ func DeleteNodeNotFound(t goatest.TInterface, ctx context.Context, service *goa.
 	// Setup request context
 	rw := httptest.NewRecorder()
 	u := &url.URL{
-		Path: fmt.Sprintf("/nodes/%v", nodeHash),
+		Path: fmt.Sprintf("/api/parties/%v", partyHash),
 	}
 	req, err := http.NewRequest("DELETE", u.String(), nil)
 	if err != nil {
 		panic("invalid test " + err.Error()) // bug
 	}
 	prms := url.Values{}
-	prms["nodeHash"] = []string{fmt.Sprintf("%v", nodeHash)}
+	prms["partyHash"] = []string{fmt.Sprintf("%v", partyHash)}
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	goaCtx := goa.NewContext(goa.WithAction(ctx, "NodeTest"), rw, req, prms)
-	deleteCtx, err := app.NewDeleteNodeContext(goaCtx, service)
+	goaCtx := goa.NewContext(goa.WithAction(ctx, "PartyTest"), rw, req, prms)
+	deleteCtx, err := app.NewDeletePartyContext(goaCtx, service)
 	if err != nil {
 		panic("invalid test data " + err.Error()) // bug
 	}
@@ -346,11 +346,11 @@ func DeleteNodeNotFound(t goatest.TInterface, ctx context.Context, service *goa.
 	return rw
 }
 
-// ListNodeOK runs the method List of the given controller with the given parameters.
+// ListPartyOK runs the method List of the given controller with the given parameters.
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func ListNodeOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.NodeController) (http.ResponseWriter, app.PinbaseNodeCollection) {
+func ListPartyOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.PartyController) (http.ResponseWriter, app.PinbasePartyCollection) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -371,7 +371,7 @@ func ListNodeOK(t goatest.TInterface, ctx context.Context, service *goa.Service,
 	// Setup request context
 	rw := httptest.NewRecorder()
 	u := &url.URL{
-		Path: fmt.Sprintf("/nodes"),
+		Path: fmt.Sprintf("/api/parties"),
 	}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
@@ -381,8 +381,8 @@ func ListNodeOK(t goatest.TInterface, ctx context.Context, service *goa.Service,
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	goaCtx := goa.NewContext(goa.WithAction(ctx, "NodeTest"), rw, req, prms)
-	listCtx, err := app.NewListNodeContext(goaCtx, service)
+	goaCtx := goa.NewContext(goa.WithAction(ctx, "PartyTest"), rw, req, prms)
+	listCtx, err := app.NewListPartyContext(goaCtx, service)
 	if err != nil {
 		panic("invalid test data " + err.Error()) // bug
 	}
@@ -397,12 +397,12 @@ func ListNodeOK(t goatest.TInterface, ctx context.Context, service *goa.Service,
 	if rw.Code != 200 {
 		t.Errorf("invalid response status code: got %+v, expected 200", rw.Code)
 	}
-	var mt app.PinbaseNodeCollection
+	var mt app.PinbasePartyCollection
 	if resp != nil {
 		var ok bool
-		mt, ok = resp.(app.PinbaseNodeCollection)
+		mt, ok = resp.(app.PinbasePartyCollection)
 		if !ok {
-			t.Fatalf("invalid response media: got %+v, expected instance of app.PinbaseNodeCollection", resp)
+			t.Fatalf("invalid response media: got %+v, expected instance of app.PinbasePartyCollection", resp)
 		}
 		err = mt.Validate()
 		if err != nil {
@@ -414,11 +414,11 @@ func ListNodeOK(t goatest.TInterface, ctx context.Context, service *goa.Service,
 	return rw, mt
 }
 
-// ShowNodeNotFound runs the method Show of the given controller with the given parameters.
+// ShowPartyNotFound runs the method Show of the given controller with the given parameters.
 // It returns the response writer so it's possible to inspect the response headers.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func ShowNodeNotFound(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.NodeController, nodeHash string) http.ResponseWriter {
+func ShowPartyNotFound(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.PartyController, partyHash string) http.ResponseWriter {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -439,19 +439,19 @@ func ShowNodeNotFound(t goatest.TInterface, ctx context.Context, service *goa.Se
 	// Setup request context
 	rw := httptest.NewRecorder()
 	u := &url.URL{
-		Path: fmt.Sprintf("/nodes/%v", nodeHash),
+		Path: fmt.Sprintf("/api/parties/%v", partyHash),
 	}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		panic("invalid test " + err.Error()) // bug
 	}
 	prms := url.Values{}
-	prms["nodeHash"] = []string{fmt.Sprintf("%v", nodeHash)}
+	prms["partyHash"] = []string{fmt.Sprintf("%v", partyHash)}
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	goaCtx := goa.NewContext(goa.WithAction(ctx, "NodeTest"), rw, req, prms)
-	showCtx, err := app.NewShowNodeContext(goaCtx, service)
+	goaCtx := goa.NewContext(goa.WithAction(ctx, "PartyTest"), rw, req, prms)
+	showCtx, err := app.NewShowPartyContext(goaCtx, service)
 	if err != nil {
 		panic("invalid test data " + err.Error()) // bug
 	}
@@ -471,11 +471,11 @@ func ShowNodeNotFound(t goatest.TInterface, ctx context.Context, service *goa.Se
 	return rw
 }
 
-// ShowNodeOK runs the method Show of the given controller with the given parameters.
+// ShowPartyOK runs the method Show of the given controller with the given parameters.
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func ShowNodeOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.NodeController, nodeHash string) (http.ResponseWriter, *app.PinbaseNode) {
+func ShowPartyOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.PartyController, partyHash string) (http.ResponseWriter, *app.PinbaseParty) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -496,19 +496,19 @@ func ShowNodeOK(t goatest.TInterface, ctx context.Context, service *goa.Service,
 	// Setup request context
 	rw := httptest.NewRecorder()
 	u := &url.URL{
-		Path: fmt.Sprintf("/nodes/%v", nodeHash),
+		Path: fmt.Sprintf("/api/parties/%v", partyHash),
 	}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		panic("invalid test " + err.Error()) // bug
 	}
 	prms := url.Values{}
-	prms["nodeHash"] = []string{fmt.Sprintf("%v", nodeHash)}
+	prms["partyHash"] = []string{fmt.Sprintf("%v", partyHash)}
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	goaCtx := goa.NewContext(goa.WithAction(ctx, "NodeTest"), rw, req, prms)
-	showCtx, err := app.NewShowNodeContext(goaCtx, service)
+	goaCtx := goa.NewContext(goa.WithAction(ctx, "PartyTest"), rw, req, prms)
+	showCtx, err := app.NewShowPartyContext(goaCtx, service)
 	if err != nil {
 		panic("invalid test data " + err.Error()) // bug
 	}
@@ -523,12 +523,12 @@ func ShowNodeOK(t goatest.TInterface, ctx context.Context, service *goa.Service,
 	if rw.Code != 200 {
 		t.Errorf("invalid response status code: got %+v, expected 200", rw.Code)
 	}
-	var mt *app.PinbaseNode
+	var mt *app.PinbaseParty
 	if resp != nil {
 		var ok bool
-		mt, ok = resp.(*app.PinbaseNode)
+		mt, ok = resp.(*app.PinbaseParty)
 		if !ok {
-			t.Fatalf("invalid response media: got %+v, expected instance of app.PinbaseNode", resp)
+			t.Fatalf("invalid response media: got %+v, expected instance of app.PinbaseParty", resp)
 		}
 		err = mt.Validate()
 		if err != nil {
@@ -540,11 +540,11 @@ func ShowNodeOK(t goatest.TInterface, ctx context.Context, service *goa.Service,
 	return rw, mt
 }
 
-// UpdateNodeBadRequest runs the method Update of the given controller with the given parameters and payload.
+// UpdatePartyBadRequest runs the method Update of the given controller with the given parameters and payload.
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func UpdateNodeBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.NodeController, nodeHash string, payload *app.NodePayload) (http.ResponseWriter, error) {
+func UpdatePartyBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.PartyController, partyHash string, payload *app.PartyPayload) (http.ResponseWriter, error) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -565,19 +565,19 @@ func UpdateNodeBadRequest(t goatest.TInterface, ctx context.Context, service *go
 	// Setup request context
 	rw := httptest.NewRecorder()
 	u := &url.URL{
-		Path: fmt.Sprintf("/nodes/%v", nodeHash),
+		Path: fmt.Sprintf("/api/parties/%v", partyHash),
 	}
 	req, err := http.NewRequest("PATCH", u.String(), nil)
 	if err != nil {
 		panic("invalid test " + err.Error()) // bug
 	}
 	prms := url.Values{}
-	prms["nodeHash"] = []string{fmt.Sprintf("%v", nodeHash)}
+	prms["partyHash"] = []string{fmt.Sprintf("%v", partyHash)}
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	goaCtx := goa.NewContext(goa.WithAction(ctx, "NodeTest"), rw, req, prms)
-	updateCtx, err := app.NewUpdateNodeContext(goaCtx, service)
+	goaCtx := goa.NewContext(goa.WithAction(ctx, "PartyTest"), rw, req, prms)
+	updateCtx, err := app.NewUpdatePartyContext(goaCtx, service)
 	if err != nil {
 		panic("invalid test data " + err.Error()) // bug
 	}
@@ -606,11 +606,11 @@ func UpdateNodeBadRequest(t goatest.TInterface, ctx context.Context, service *go
 	return rw, mt
 }
 
-// UpdateNodeNotFound runs the method Update of the given controller with the given parameters and payload.
+// UpdatePartyNotFound runs the method Update of the given controller with the given parameters and payload.
 // It returns the response writer so it's possible to inspect the response headers.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func UpdateNodeNotFound(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.NodeController, nodeHash string, payload *app.NodePayload) http.ResponseWriter {
+func UpdatePartyNotFound(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.PartyController, partyHash string, payload *app.PartyPayload) http.ResponseWriter {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -631,19 +631,19 @@ func UpdateNodeNotFound(t goatest.TInterface, ctx context.Context, service *goa.
 	// Setup request context
 	rw := httptest.NewRecorder()
 	u := &url.URL{
-		Path: fmt.Sprintf("/nodes/%v", nodeHash),
+		Path: fmt.Sprintf("/api/parties/%v", partyHash),
 	}
 	req, err := http.NewRequest("PATCH", u.String(), nil)
 	if err != nil {
 		panic("invalid test " + err.Error()) // bug
 	}
 	prms := url.Values{}
-	prms["nodeHash"] = []string{fmt.Sprintf("%v", nodeHash)}
+	prms["partyHash"] = []string{fmt.Sprintf("%v", partyHash)}
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	goaCtx := goa.NewContext(goa.WithAction(ctx, "NodeTest"), rw, req, prms)
-	updateCtx, err := app.NewUpdateNodeContext(goaCtx, service)
+	goaCtx := goa.NewContext(goa.WithAction(ctx, "PartyTest"), rw, req, prms)
+	updateCtx, err := app.NewUpdatePartyContext(goaCtx, service)
 	if err != nil {
 		panic("invalid test data " + err.Error()) // bug
 	}
@@ -664,11 +664,11 @@ func UpdateNodeNotFound(t goatest.TInterface, ctx context.Context, service *goa.
 	return rw
 }
 
-// UpdateNodeOK runs the method Update of the given controller with the given parameters and payload.
+// UpdatePartyOK runs the method Update of the given controller with the given parameters and payload.
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func UpdateNodeOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.NodeController, nodeHash string, payload *app.NodePayload) (http.ResponseWriter, *app.PinbaseNode) {
+func UpdatePartyOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.PartyController, partyHash string, payload *app.PartyPayload) (http.ResponseWriter, *app.PinbaseParty) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -689,19 +689,19 @@ func UpdateNodeOK(t goatest.TInterface, ctx context.Context, service *goa.Servic
 	// Setup request context
 	rw := httptest.NewRecorder()
 	u := &url.URL{
-		Path: fmt.Sprintf("/nodes/%v", nodeHash),
+		Path: fmt.Sprintf("/api/parties/%v", partyHash),
 	}
 	req, err := http.NewRequest("PATCH", u.String(), nil)
 	if err != nil {
 		panic("invalid test " + err.Error()) // bug
 	}
 	prms := url.Values{}
-	prms["nodeHash"] = []string{fmt.Sprintf("%v", nodeHash)}
+	prms["partyHash"] = []string{fmt.Sprintf("%v", partyHash)}
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	goaCtx := goa.NewContext(goa.WithAction(ctx, "NodeTest"), rw, req, prms)
-	updateCtx, err := app.NewUpdateNodeContext(goaCtx, service)
+	goaCtx := goa.NewContext(goa.WithAction(ctx, "PartyTest"), rw, req, prms)
+	updateCtx, err := app.NewUpdatePartyContext(goaCtx, service)
 	if err != nil {
 		panic("invalid test data " + err.Error()) // bug
 	}
@@ -717,12 +717,12 @@ func UpdateNodeOK(t goatest.TInterface, ctx context.Context, service *goa.Servic
 	if rw.Code != 200 {
 		t.Errorf("invalid response status code: got %+v, expected 200", rw.Code)
 	}
-	var mt *app.PinbaseNode
+	var mt *app.PinbaseParty
 	if resp != nil {
 		var ok bool
-		mt, ok = resp.(*app.PinbaseNode)
+		mt, ok = resp.(*app.PinbaseParty)
 		if !ok {
-			t.Fatalf("invalid response media: got %+v, expected instance of app.PinbaseNode", resp)
+			t.Fatalf("invalid response media: got %+v, expected instance of app.PinbaseParty", resp)
 		}
 		err = mt.Validate()
 		if err != nil {

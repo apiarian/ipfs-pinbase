@@ -23,7 +23,7 @@ var _ = API("pinbase", func() {
 
 	Host("localhost:3000")
 	Scheme("http")
-	BasePath("")
+	BasePath("/api")
 
 	Consumes("application/json")
 	Produces("application/json")
@@ -39,97 +39,55 @@ var _ = API("pinbase", func() {
 	})
 })
 
-var LoginBasicAuth = BasicAuthSecurity("LoginBasicAuth")
-
-var JWT = JWTSecurity("jwt", func() {
-	Header("Authorization")
-	TokenURL("/login")
-
-	Scope("node:view")
-	Scope("node:create")
-	Scope("node:edit")
-	Scope("node:delete")
-})
-
-var _ = Resource("login", func() {
-	Description("The login resrouce to obtain a token")
-
-	Action("login", func() {
-		Description("Get a new JWT token")
-		Routing(POST("/login"))
-		Security(LoginBasicAuth)
-		Response(NoContent, func() {
-			Headers(func() {
-				Header("Authorization", String, "The new JWT")
-			})
-		})
-	})
-})
-
-var _ = Resource("node", func() {
-	Description("The IPFS node resrouce")
-	BasePath("/nodes")
+var _ = Resource("party", func() {
+	Description("The Pinbase Party resource")
+	BasePath("/parties")
 
 	Action("list", func() {
-		Description("List the nodes available to this pinbase")
+		Description("List the parties available in this pinbase")
 		Routing(GET(""))
-		Security(JWT, func() {
-			Scope("node:view")
-		})
 		Response(OK, func() {
-			Media(CollectionOf(NodeMedia))
+			Media(CollectionOf(PartyMedia))
 		})
 	})
 
 	Action("show", func() {
-		Description("Get node by hash")
-		Routing(GET("/:nodeHash"))
+		Description("Get the party by hash")
+		Routing(GET("/:partyHash"))
 		Params(func() {
-			Param("nodeHash", String, "Node Hash")
+			Param("partyHash", String, "Party Hash")
 		})
-		Security(JWT, func() {
-			Scope("node:view")
-		})
-		Response(OK, NodeMedia)
+		Response(OK, PartyMedia)
 		Response(NotFound)
 	})
 
 	Action("create", func() {
-		Description("Connect to a node")
+		Description("Create a party")
 		Routing(POST(""))
-		Payload(NodePayload, func() {
-			Required("api-url", "description")
+		Payload(PartyPayload, func() {
+			Required("hash", "description")
 		})
-		Security(JWT, func() {
-			Scope("node:create")
-		})
-		Response(Created, "/nodes/.+")
+		Response(Created, "/parties/.+")
 		Response(BadRequest, ErrorMedia)
 	})
 
 	Action("update", func() {
-		Description("Change a node's address (must be the same node-id) or description")
-		Routing(PATCH("/:nodeHash"))
+		Description("Change a party's description")
+		Routing(PATCH("/:partyHash"))
 		Params(func() {
-			Param("nodeHash", String, "Node Hash")
+			Param("partyHash", String, "Party Hash")
 		})
-		Payload(NodePayload)
-		Security(JWT, func() {
-			Scope("node:edit")
-		})
-		Response(OK, NodeMedia)
+		Payload(PartyPayload)
+		Response(OK, PartyMedia)
 		Response(NotFound)
 		Response(BadRequest, ErrorMedia)
 	})
 
 	Action("delete", func() {
-		Description("Delete a node")
-		Routing(DELETE("/:nodeHash"))
+		Description("Delete a party")
+		Routing(DELETE("/:partyHash"))
 		Params(func() {
-			Param("nodeHash", String, "Node Hash")
-		})
-		Security(JWT, func() {
-			Scope("node:delete")
+			Param("partyHash", String, "Party Hash")
 		})
 		Response(NoContent)
 		Response(NotFound)
@@ -137,23 +95,21 @@ var _ = Resource("node", func() {
 	})
 })
 
-var NodePayload = Type("node-payload", func() {
-	Attribute("api-url", String, "The API URL for the node, possibly relative to the pinbase (i.e. localhost)")
-	Attribute("description", String, "A helpful description of the node")
+var PartyPayload = Type("party-payload", func() {
+	Attribute("hash", String, "The hash of the object describing the party")
+	Attribute("description", String, "A helpful description of the party")
 })
 
-var NodeMedia = MediaType("application/vnd.pinbase.node+json", func() {
-	Description("An IPFS node")
-	Reference(NodePayload)
+var PartyMedia = MediaType("application/vnd.pinbase.party+json", func() {
+	Description("A Pinbase Party")
+	Reference(PartyPayload)
 	Attributes(func() {
-		Attribute("hash", String, "The nodes' unique hash")
+		Attribute("hash")
 		Attribute("description")
-		Attribute("api-url")
-		Required("hash", "description", "api-url")
+		Required("hash", "description")
 	})
 	View("default", func() {
 		Attribute("hash")
 		Attribute("description")
-		Attribute("api-url")
 	})
 })
