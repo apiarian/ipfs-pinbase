@@ -90,6 +90,8 @@ func (c *Client) PinBackend() pinbase.PinBackend {
 	}
 }
 
+var _ pinbase.PinProvider = &Client{}
+
 type PinService struct {
 	db   *bolt.DB
 	bump chan struct{}
@@ -156,6 +158,10 @@ func getArchiveBucket(tx *bolt.Tx) (*bolt.Bucket, error) {
 var sentinel = []byte("x")
 
 func (ps *PinService) Parties() ([]*pinbase.PartyView, error) {
+	if ps.db == nil {
+		return nil, errors.New("no database connection")
+	}
+
 	var list []*pinbase.PartyView
 
 	err := ps.db.View(func(tx *bolt.Tx) error {
@@ -195,6 +201,10 @@ func (ps *PinService) Parties() ([]*pinbase.PartyView, error) {
 }
 
 func (ps *PinService) Party(h pinbase.Hash) (*pinbase.PartyView, error) {
+	if ps.db == nil {
+		return nil, errors.New("no database connection")
+	}
+
 	var p *pinbase.PartyView
 
 	err := ps.db.View(func(tx *bolt.Tx) error {
@@ -226,6 +236,10 @@ func (ps *PinService) Party(h pinbase.Hash) (*pinbase.PartyView, error) {
 }
 
 func (ps *PinService) CreateParty(p *pinbase.PartyCreate) error {
+	if ps.db == nil {
+		return errors.New("no database connection")
+	}
+
 	return ps.db.Update(func(tx *bolt.Tx) error {
 		parties, err := getPartiesBucket(tx)
 		if err != nil {
@@ -264,6 +278,10 @@ func (ps *PinService) CreateParty(p *pinbase.PartyCreate) error {
 }
 
 func (ps *PinService) DeleteParty(h pinbase.Hash) error {
+	if ps.db == nil {
+		return errors.New("no database connection")
+	}
+
 	var pinsDeleted bool
 
 	err := ps.db.Update(func(tx *bolt.Tx) error {
@@ -326,6 +344,10 @@ func (ps *PinService) DeleteParty(h pinbase.Hash) error {
 }
 
 func (ps *PinService) UpdateParty(h pinbase.Hash, p *pinbase.PartyEdit) error {
+	if ps.db == nil {
+		return errors.New("no database connection")
+	}
+
 	return ps.db.Update(func(tx *bolt.Tx) error {
 		parties, err := getPartiesBucket(tx)
 		if err != nil {
@@ -402,6 +424,10 @@ func writePinStorage(pins *bolt.Bucket, h pinbase.Hash, p *pinStorage) error {
 }
 
 func (ps *PinService) Pins(partyID pinbase.Hash) ([]*pinbase.PinView, error) {
+	if ps.db == nil {
+		return nil, errors.New("no database connection")
+	}
+
 	var list []*pinbase.PinView
 
 	err := ps.db.View(func(tx *bolt.Tx) error {
@@ -444,6 +470,10 @@ func (ps *PinService) Pins(partyID pinbase.Hash) ([]*pinbase.PinView, error) {
 }
 
 func (ps *PinService) Pin(partyID, pinID pinbase.Hash) (*pinbase.PinView, error) {
+	if ps.db == nil {
+		return nil, errors.New("no database connection")
+	}
+
 	var p *pinbase.PinView
 
 	err := ps.db.View(func(tx *bolt.Tx) error {
@@ -482,6 +512,10 @@ func (ps *PinService) Pin(partyID, pinID pinbase.Hash) (*pinbase.PinView, error)
 }
 
 func (ps *PinService) CreatePin(partyID pinbase.Hash, pc *pinbase.PinCreate) error {
+	if ps.db == nil {
+		return errors.New("no database connection")
+	}
+
 	err := ps.db.Update(func(tx *bolt.Tx) error {
 		pins, err := getPinsBucket(tx, partyID)
 		if err != nil {
@@ -516,6 +550,10 @@ func (ps *PinService) CreatePin(partyID pinbase.Hash, pc *pinbase.PinCreate) err
 }
 
 func (ps *PinService) DeletePin(partyID, pinID pinbase.Hash) error {
+	if ps.db == nil {
+		return errors.New("no database connection")
+	}
+
 	err := ps.db.Update(func(tx *bolt.Tx) error {
 		pins, err := getPinsBucket(tx, partyID)
 		if err != nil {
@@ -553,6 +591,10 @@ func (ps *PinService) DeletePin(partyID, pinID pinbase.Hash) error {
 }
 
 func (ps *PinService) UpdatePin(partyID, pinID pinbase.Hash, pe *pinbase.PinEdit) error {
+	if ps.db == nil {
+		return errors.New("no database connection")
+	}
+
 	var wantChanged bool
 
 	err := ps.db.Update(func(tx *bolt.Tx) error {
@@ -604,6 +646,11 @@ func (ps *PinService) PinProcessorBump() <-chan struct{} {
 
 func (ps *PinService) PinRequirements() map[pinbase.Hash]bool {
 	m := make(map[pinbase.Hash]bool)
+
+	if ps.db == nil {
+		log.Print("no database connection")
+		return m
+	}
 
 	err := ps.db.View(func(tx *bolt.Tx) error {
 		parties, err := getPartiesBucket(tx)
@@ -676,6 +723,11 @@ func (ps *PinService) PinRequirements() map[pinbase.Hash]bool {
 }
 
 func (ps *PinService) NotifyPin(pinID pinbase.Hash, s *pinbase.PinBackendState) {
+	if ps.db == nil {
+		log.Print("no database connection")
+		return
+	}
+
 	pinKey := []byte(pinID)
 
 	err := ps.db.Update(func(tx *bolt.Tx) error {

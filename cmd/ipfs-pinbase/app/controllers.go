@@ -120,7 +120,7 @@ func MountPartyController(service *goa.Service, ctrl PartyController) {
 		}
 		// Build the payload
 		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
-			rctx.Payload = rawPayload.(*PartyPayload)
+			rctx.Payload = rawPayload.(*PartyUpdatePayload)
 		} else {
 			return goa.MissingPayloadError()
 		}
@@ -147,7 +147,7 @@ func unmarshalCreatePartyPayload(ctx context.Context, service *goa.Service, req 
 
 // unmarshalUpdatePartyPayload unmarshals the request body into the context request data Payload field.
 func unmarshalUpdatePartyPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
-	payload := &partyPayload{}
+	payload := &partyUpdatePayload{}
 	if err := service.DecodeRequest(req, payload); err != nil {
 		return err
 	}

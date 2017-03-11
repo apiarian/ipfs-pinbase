@@ -144,8 +144,7 @@ Payload example:
 Payload example:
 
 {
-   "description": "Nostrum architecto repellendus molestiae et.",
-   "hash": "Rerum accusamus voluptates atque."
+   "description": "Facilis vero minus."
 }`,
 		RunE: func(cmd *cobra.Command, args []string) error { return tmp5.Run(c, args) },
 	}
@@ -425,7 +424,7 @@ func (cmd *UpdatePartyCommand) Run(c *client.Client, args []string) error {
 	} else {
 		path = fmt.Sprintf("/api/parties/%v", url.QueryEscape(cmd.PartyHash))
 	}
-	var payload client.PartyPayload
+	var payload client.PartyUpdatePayload
 	if cmd.Payload != "" {
 		err := json.Unmarshal([]byte(cmd.Payload), &payload)
 		if err != nil {

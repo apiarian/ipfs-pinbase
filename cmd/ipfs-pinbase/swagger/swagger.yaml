@@ -87,20 +87,15 @@ definitions:
         type: string
     title: 'Mediatype identifier: application/vnd.goa.error; view=default'
     type: object
-  party-payload:
+  party-update-payload:
     example:
-      description: Nostrum architecto repellendus molestiae et.
-      hash: Rerum accusamus voluptates atque.
+      description: Facilis vero minus.
     properties:
       description:
         description: A helpful description of the party
-        example: Nostrum architecto repellendus molestiae et.
+        example: Facilis vero minus.
         type: string
-      hash:
-        description: The hash of the object describing the party
-        example: Rerum accusamus voluptates atque.
-        type: string
-    title: party-payload
+    title: party-update-payload
     type: object
 host: localhost:3000
 info:
@@ -212,7 +207,7 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/party-payload'
+          $ref: '#/definitions/party-update-payload'
       responses:
         "200":
           description: OK

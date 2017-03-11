@@ -157,7 +157,7 @@ func UpdatePartyPath(partyHash string) string {
 }
 
 // Change a party's description
-func (c *Client) UpdateParty(ctx context.Context, path string, payload *PartyPayload) (*http.Response, error) {
+func (c *Client) UpdateParty(ctx context.Context, path string, payload *PartyUpdatePayload) (*http.Response, error) {
 	req, err := c.NewUpdatePartyRequest(ctx, path, payload)
 	if err != nil {
 		return nil, err
@@ -166,7 +166,7 @@ func (c *Client) UpdateParty(ctx context.Context, path string, payload *PartyPay
 }
 
 // NewUpdatePartyRequest create the request corresponding to the update action endpoint of the party resource.
-func (c *Client) NewUpdatePartyRequest(ctx context.Context, path string, payload *PartyPayload) (*http.Request, error) {
+func (c *Client) NewUpdatePartyRequest(ctx context.Context, path string, payload *PartyUpdatePayload) (*http.Request, error) {
 	var body bytes.Buffer
 	err := c.Encoder.Encode(payload, &body, "*/*")
 	if err != nil {

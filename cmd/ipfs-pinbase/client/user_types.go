@@ -10,17 +10,17 @@
 
 package client
 
-// partyPayload user type.
-type partyPayload struct {
+// partyCreatePayload user type.
+type partyCreatePayload struct {
 	// A helpful description of the party
 	Description *string `form:"description,omitempty" json:"description,omitempty" xml:"description,omitempty"`
 	// The hash of the object describing the party
 	Hash *string `form:"hash,omitempty" json:"hash,omitempty" xml:"hash,omitempty"`
 }
 
-// Publicize creates PartyPayload from partyPayload
-func (ut *partyPayload) Publicize() *PartyPayload {
-	var pub PartyPayload
+// Publicize creates PartyCreatePayload from partyCreatePayload
+func (ut *partyCreatePayload) Publicize() *PartyCreatePayload {
+	var pub PartyCreatePayload
 	if ut.Description != nil {
 		pub.Description = ut.Description
 	}
@@ -30,10 +30,31 @@ func (ut *partyPayload) Publicize() *PartyPayload {
 	return &pub
 }
 
-// PartyPayload user type.
-type PartyPayload struct {
+// PartyCreatePayload user type.
+type PartyCreatePayload struct {
 	// A helpful description of the party
 	Description *string `form:"description,omitempty" json:"description,omitempty" xml:"description,omitempty"`
 	// The hash of the object describing the party
 	Hash *string `form:"hash,omitempty" json:"hash,omitempty" xml:"hash,omitempty"`
+}
+
+// partyUpdatePayload user type.
+type partyUpdatePayload struct {
+	// A helpful description of the party
+	Description *string `form:"description,omitempty" json:"description,omitempty" xml:"description,omitempty"`
+}
+
+// Publicize creates PartyUpdatePayload from partyUpdatePayload
+func (ut *partyUpdatePayload) Publicize() *PartyUpdatePayload {
+	var pub PartyUpdatePayload
+	if ut.Description != nil {
+		pub.Description = ut.Description
+	}
+	return &pub
+}
+
+// PartyUpdatePayload user type.
+type PartyUpdatePayload struct {
+	// A helpful description of the party
+	Description *string `form:"description,omitempty" json:"description,omitempty" xml:"description,omitempty"`
 }

@@ -85,6 +85,10 @@ func (p PinStatus) String() string {
 	}
 }
 
+type PinProvider interface {
+	PinService() PinService
+}
+
 type PinService interface {
 	Parties() ([]*PartyView, error)
 	Party(Hash) (*PartyView, error)

@@ -544,7 +544,7 @@ func ShowPartyOK(t goatest.TInterface, ctx context.Context, service *goa.Service
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func UpdatePartyBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.PartyController, partyHash string, payload *app.PartyPayload) (http.ResponseWriter, error) {
+func UpdatePartyBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.PartyController, partyHash string, payload *app.PartyUpdatePayload) (http.ResponseWriter, error) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -610,7 +610,7 @@ func UpdatePartyBadRequest(t goatest.TInterface, ctx context.Context, service *g
 // It returns the response writer so it's possible to inspect the response headers.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func UpdatePartyNotFound(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.PartyController, partyHash string, payload *app.PartyPayload) http.ResponseWriter {
+func UpdatePartyNotFound(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.PartyController, partyHash string, payload *app.PartyUpdatePayload) http.ResponseWriter {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -668,7 +668,7 @@ func UpdatePartyNotFound(t goatest.TInterface, ctx context.Context, service *goa
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func UpdatePartyOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.PartyController, partyHash string, payload *app.PartyPayload) (http.ResponseWriter, *app.PinbaseParty) {
+func UpdatePartyOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.PartyController, partyHash string, payload *app.PartyUpdatePayload) (http.ResponseWriter, *app.PinbaseParty) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer

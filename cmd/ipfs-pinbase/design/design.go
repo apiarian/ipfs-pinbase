@@ -64,7 +64,7 @@ var _ = Resource("party", func() {
 	Action("create", func() {
 		Description("Create a party")
 		Routing(POST(""))
-		Payload(PartyPayload, func() {
+		Payload(PartyCreatePayload, func() {
 			Required("hash", "description")
 		})
 		Response(Created, "/parties/.+")
@@ -77,7 +77,7 @@ var _ = Resource("party", func() {
 		Params(func() {
 			Param("partyHash", String, "Party Hash")
 		})
-		Payload(PartyPayload)
+		Payload(PartyUpdatePayload)
 		Response(OK, PartyMedia)
 		Response(NotFound)
 		Response(BadRequest, ErrorMedia)
@@ -95,21 +95,33 @@ var _ = Resource("party", func() {
 	})
 })
 
-var PartyPayload = Type("party-payload", func() {
+func PartyHash() {
 	Attribute("hash", String, "The hash of the object describing the party")
+}
+
+func PartyDescription() {
 	Attribute("description", String, "A helpful description of the party")
+}
+
+var PartyCreatePayload = Type("party-create-payload", func() {
+	PartyHash()
+	PartyDescription()
+})
+
+var PartyUpdatePayload = Type("party-update-payload", func() {
+	PartyDescription()
 })
 
 var PartyMedia = MediaType("application/vnd.pinbase.party+json", func() {
 	Description("A Pinbase Party")
-	Reference(PartyPayload)
+	Reference(PartyCreatePayload)
 	Attributes(func() {
-		Attribute("hash")
-		Attribute("description")
+		PartyHash()
+		PartyDescription()
 		Required("hash", "description")
 	})
 	View("default", func() {
-		Attribute("hash")
-		Attribute("description")
+		PartyHash()
+		PartyDescription()
 	})
 })

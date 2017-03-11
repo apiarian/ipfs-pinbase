@@ -207,7 +207,7 @@ type UpdatePartyContext struct {
 	*goa.ResponseData
 	*goa.RequestData
 	PartyHash string
-	Payload   *PartyPayload
+	Payload   *PartyUpdatePayload
 }
 
 // NewUpdatePartyContext parses the incoming request URL and body, performs validations and creates the
