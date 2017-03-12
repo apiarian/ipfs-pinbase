@@ -21,6 +21,9 @@ func main() {
 	// Mount "party" controller
 	c := NewPartyController(service)
 	app.MountPartyController(service, c)
+	// Mount "pin" controller
+	c2 := NewPinController(service)
+	app.MountPinController(service, c2)
 
 	// Start service
 	if err := service.ListenAndServe(":3000"); err != nil {

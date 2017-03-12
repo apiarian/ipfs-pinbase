@@ -30,7 +30,8 @@ func (c *PartyController) Create(ctx *app.CreatePartyContext) error {
 	}
 
 	// PartyController_Create: end_implement
-	return nil
+	ctx.ResponseData.Header().Set("Location", app.PartyHref(ctx.Payload.Hash))
+	return ctx.Created()
 }
 
 // Delete runs the delete action.
@@ -50,16 +51,16 @@ func (c *PartyController) Delete(ctx *app.DeletePartyContext) error {
 func (c *PartyController) List(ctx *app.ListPartyContext) error {
 	// PartyController_List: start_implement
 
-	p, err := c.P.PinService().Parties()
+	ps, err := c.P.PinService().Parties()
 	if err != nil {
 		return err
 	}
 
 	res := app.PinbasePartyCollection{}
-	for _, x := range p {
+	for _, p := range ps {
 		res = append(res, &app.PinbaseParty{
-			Hash:        string(x.ID),
-			Description: x.Description,
+			Hash:        string(p.ID),
+			Description: p.Description,
 		})
 	}
 

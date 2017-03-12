@@ -55,7 +55,7 @@ var _ = Resource("party", func() {
 		Description("Get the party by hash")
 		Routing(GET("/:partyHash"))
 		Params(func() {
-			Param("partyHash", String, "Party Hash")
+			PartyHashParam()
 		})
 		Response(OK, PartyMedia)
 		Response(NotFound)
@@ -75,7 +75,7 @@ var _ = Resource("party", func() {
 		Description("Change a party's description")
 		Routing(PATCH("/:partyHash"))
 		Params(func() {
-			Param("partyHash", String, "Party Hash")
+			PartyHashParam()
 		})
 		Payload(PartyUpdatePayload)
 		Response(OK, PartyMedia)
@@ -87,13 +87,17 @@ var _ = Resource("party", func() {
 		Description("Delete a party")
 		Routing(DELETE("/:partyHash"))
 		Params(func() {
-			Param("partyHash", String, "Party Hash")
+			PartyHashParam()
 		})
 		Response(NoContent)
 		Response(NotFound)
 		Response(BadRequest, ErrorMedia)
 	})
 })
+
+func PartyHashParam() {
+	Param("partyHash", String, "Party Hash")
+}
 
 func PartyHash() {
 	Attribute("hash", String, "The hash of the object describing the party")
@@ -114,7 +118,6 @@ var PartyUpdatePayload = Type("party-update-payload", func() {
 
 var PartyMedia = MediaType("application/vnd.pinbase.party+json", func() {
 	Description("A Pinbase Party")
-	Reference(PartyCreatePayload)
 	Attributes(func() {
 		PartyHash()
 		PartyDescription()
@@ -123,5 +126,116 @@ var PartyMedia = MediaType("application/vnd.pinbase.party+json", func() {
 	View("default", func() {
 		PartyHash()
 		PartyDescription()
+	})
+})
+
+var _ = Resource("pin", func() {
+	Description("A thing to pin in IPFS")
+	BasePath("/parties/:partyHash/pins")
+
+	Action("list", func() {
+		Description("List the pins under the party")
+		Routing(GET(""))
+		Params(func() {
+			PartyHashParam()
+		})
+		Response(OK, func() {
+			Media(CollectionOf(PinMedia))
+		})
+	})
+
+	Action("show", func() {
+		Description("Get the pin under the party by hash")
+		Routing(GET("/:pinHash"))
+		Params(func() {
+			PartyHashParam()
+			PinHashParam()
+		})
+		Response(OK, PinMedia)
+		Response(NotFound)
+	})
+
+	Action("create", func() {
+		Description("Create a pin under the party")
+		Routing(POST(""))
+		Params(func() {
+			PartyHashParam()
+		})
+		Payload(PinCreatePayload, func() {
+			Required("hash", "aliases", "want-pinned")
+		})
+		Response(Created, "/parties/.+/pins/.+")
+		Response(BadRequest, ErrorMedia)
+	})
+
+	Action("update", func() {
+		Description("Update a pin under the party")
+		Routing(PATCH("/:pinHash"))
+		Params(func() {
+			PartyHashParam()
+			PinHashParam()
+		})
+		Payload(PinUpdatePayload)
+		Response(OK, PinMedia)
+		Response(NotFound)
+		Response(BadRequest, ErrorMedia)
+	})
+
+	Action("delete", func() {
+		Description("Delete a pin under the party")
+		Routing(DELETE("/:pinHash"))
+		Params(func() {
+			PartyHashParam()
+			PinHashParam()
+		})
+		Response(NoContent)
+		Response(NotFound)
+		Response(BadRequest, ErrorMedia)
+	})
+})
+
+func PinHashParam() {
+	Param("pinHash", String, "Pin Hash")
+}
+
+func PinHash() {
+	Attribute("hash", String, "The hash of the object to be pinned")
+}
+
+func PinAliases() {
+	Attribute("aliases", ArrayOf(String), "Aliases for the pinned object")
+}
+
+func PinWantPinned() {
+	Attribute("want-pinned", Boolean, "Indicates that the party wants to actually pin the object")
+}
+
+var PinCreatePayload = Type("pin-create-payload", func() {
+	PinHash()
+	PinAliases()
+	PinWantPinned()
+})
+
+var PinUpdatePayload = Type("pin-update-payload", func() {
+	PinAliases()
+	PinWantPinned()
+})
+
+var PinMedia = MediaType("application/vnd.pinbase.pin+json", func() {
+	Description("A Pin for a Party")
+	Attributes(func() {
+		PinHash()
+		PinAliases()
+		PinWantPinned()
+		Attribute("status", String, "The status of the pin")
+		Attribute("last-error", String, "Last pin error message")
+		Required("hash", "aliases", "want-pinned", "status", "last-error")
+	})
+	View("default", func() {
+		PinHash()
+		PinAliases()
+		PinWantPinned()
+		Attribute("status")
+		Attribute("last-error")
 	})
 })

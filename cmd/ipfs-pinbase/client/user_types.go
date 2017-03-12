@@ -58,3 +58,66 @@ type PartyUpdatePayload struct {
 	// A helpful description of the party
 	Description *string `form:"description,omitempty" json:"description,omitempty" xml:"description,omitempty"`
 }
+
+// pinCreatePayload user type.
+type pinCreatePayload struct {
+	// Aliases for the pinned object
+	Aliases []string `form:"aliases,omitempty" json:"aliases,omitempty" xml:"aliases,omitempty"`
+	// The hash of the object to be pinned
+	Hash *string `form:"hash,omitempty" json:"hash,omitempty" xml:"hash,omitempty"`
+	// Indicates that the party wants to actually pin the object
+	WantPinned *bool `form:"want-pinned,omitempty" json:"want-pinned,omitempty" xml:"want-pinned,omitempty"`
+}
+
+// Publicize creates PinCreatePayload from pinCreatePayload
+func (ut *pinCreatePayload) Publicize() *PinCreatePayload {
+	var pub PinCreatePayload
+	if ut.Aliases != nil {
+		pub.Aliases = ut.Aliases
+	}
+	if ut.Hash != nil {
+		pub.Hash = ut.Hash
+	}
+	if ut.WantPinned != nil {
+		pub.WantPinned = ut.WantPinned
+	}
+	return &pub
+}
+
+// PinCreatePayload user type.
+type PinCreatePayload struct {
+	// Aliases for the pinned object
+	Aliases []string `form:"aliases,omitempty" json:"aliases,omitempty" xml:"aliases,omitempty"`
+	// The hash of the object to be pinned
+	Hash *string `form:"hash,omitempty" json:"hash,omitempty" xml:"hash,omitempty"`
+	// Indicates that the party wants to actually pin the object
+	WantPinned *bool `form:"want-pinned,omitempty" json:"want-pinned,omitempty" xml:"want-pinned,omitempty"`
+}
+
+// pinUpdatePayload user type.
+type pinUpdatePayload struct {
+	// Aliases for the pinned object
+	Aliases []string `form:"aliases,omitempty" json:"aliases,omitempty" xml:"aliases,omitempty"`
+	// Indicates that the party wants to actually pin the object
+	WantPinned *bool `form:"want-pinned,omitempty" json:"want-pinned,omitempty" xml:"want-pinned,omitempty"`
+}
+
+// Publicize creates PinUpdatePayload from pinUpdatePayload
+func (ut *pinUpdatePayload) Publicize() *PinUpdatePayload {
+	var pub PinUpdatePayload
+	if ut.Aliases != nil {
+		pub.Aliases = ut.Aliases
+	}
+	if ut.WantPinned != nil {
+		pub.WantPinned = ut.WantPinned
+	}
+	return &pub
+}
+
+// PinUpdatePayload user type.
+type PinUpdatePayload struct {
+	// Aliases for the pinned object
+	Aliases []string `form:"aliases,omitempty" json:"aliases,omitempty" xml:"aliases,omitempty"`
+	// Indicates that the party wants to actually pin the object
+	WantPinned *bool `form:"want-pinned,omitempty" json:"want-pinned,omitempty" xml:"want-pinned,omitempty"`
+}

@@ -4,21 +4,52 @@ consumes:
 definitions:
   CreatePartyPayload:
     example:
-      description: Nostrum architecto repellendus molestiae et.
-      hash: Rerum accusamus voluptates atque.
+      description: Commodi ea magni mollitia dicta.
+      hash: Magni ullam id dolorem sunt consequatur incidunt.
     properties:
       description:
         description: A helpful description of the party
-        example: Nostrum architecto repellendus molestiae et.
+        example: Commodi ea magni mollitia dicta.
         type: string
       hash:
         description: The hash of the object describing the party
-        example: Rerum accusamus voluptates atque.
+        example: Magni ullam id dolorem sunt consequatur incidunt.
         type: string
     required:
     - hash
     - description
     title: CreatePartyPayload
+    type: object
+  CreatePinPayload:
+    example:
+      aliases:
+      - Ipsa architecto.
+      - Ipsa architecto.
+      hash: Ut velit.
+      want-pinned: true
+    properties:
+      aliases:
+        description: Aliases for the pinned object
+        example:
+        - Ipsa architecto.
+        - Ipsa architecto.
+        items:
+          example: Ipsa architecto.
+          type: string
+        type: array
+      hash:
+        description: The hash of the object to be pinned
+        example: Ut velit.
+        type: string
+      want-pinned:
+        description: Indicates that the party wants to actually pin the object
+        example: true
+        type: boolean
+    required:
+    - hash
+    - aliases
+    - want-pinned
+    title: CreatePinPayload
     type: object
   PinbaseParty:
     description: A Pinbase Party (default view)
@@ -48,6 +79,75 @@ definitions:
     items:
       $ref: '#/definitions/PinbaseParty'
     title: 'Mediatype identifier: application/vnd.pinbase.party+json; type=collection;
+      view=default'
+    type: array
+  PinbasePin:
+    description: A Pin for a Party (default view)
+    example:
+      aliases:
+      - Architecto repellendus molestiae et officia.
+      hash: Accusamus voluptates atque reprehenderit facilis vero.
+      last-error: Quisquam nulla veritatis atque.
+      status: Aut quis eaque et.
+      want-pinned: false
+    properties:
+      aliases:
+        description: Aliases for the pinned object
+        example:
+        - Architecto repellendus molestiae et officia.
+        items:
+          example: Architecto repellendus molestiae et officia.
+          type: string
+        type: array
+      hash:
+        description: The hash of the object to be pinned
+        example: Accusamus voluptates atque reprehenderit facilis vero.
+        type: string
+      last-error:
+        description: Last pin error message
+        example: Quisquam nulla veritatis atque.
+        type: string
+      status:
+        description: The status of the pin
+        example: Aut quis eaque et.
+        type: string
+      want-pinned:
+        description: Indicates that the party wants to actually pin the object
+        example: false
+        type: boolean
+    required:
+    - hash
+    - aliases
+    - want-pinned
+    - status
+    - last-error
+    title: 'Mediatype identifier: application/vnd.pinbase.pin+json; view=default'
+    type: object
+  PinbasePinCollection:
+    description: PinbasePinCollection is the media type for an array of PinbasePin
+      (default view)
+    example:
+    - aliases:
+      - Architecto repellendus molestiae et officia.
+      hash: Accusamus voluptates atque reprehenderit facilis vero.
+      last-error: Quisquam nulla veritatis atque.
+      status: Aut quis eaque et.
+      want-pinned: false
+    - aliases:
+      - Architecto repellendus molestiae et officia.
+      hash: Accusamus voluptates atque reprehenderit facilis vero.
+      last-error: Quisquam nulla veritatis atque.
+      status: Aut quis eaque et.
+      want-pinned: false
+    - aliases:
+      - Architecto repellendus molestiae et officia.
+      hash: Accusamus voluptates atque reprehenderit facilis vero.
+      last-error: Quisquam nulla veritatis atque.
+      status: Aut quis eaque et.
+      want-pinned: false
+    items:
+      $ref: '#/definitions/PinbasePin'
+    title: 'Mediatype identifier: application/vnd.pinbase.pin+json; type=collection;
       view=default'
     type: array
   error:
@@ -89,13 +189,33 @@ definitions:
     type: object
   party-update-payload:
     example:
-      description: Facilis vero minus.
+      description: Doloremque modi et quae.
     properties:
       description:
         description: A helpful description of the party
-        example: Facilis vero minus.
+        example: Doloremque modi et quae.
         type: string
     title: party-update-payload
+    type: object
+  pin-update-payload:
+    example:
+      aliases:
+      - Provident est eum quis rem ut.
+      want-pinned: false
+    properties:
+      aliases:
+        description: Aliases for the pinned object
+        example:
+        - Provident est eum quis rem ut.
+        items:
+          example: Provident est eum quis rem ut.
+          type: string
+        type: array
+      want-pinned:
+        description: Indicates that the party wants to actually pin the object
+        example: false
+        type: boolean
+    title: pin-update-payload
     type: object
 host: localhost:3000
 info:
@@ -224,6 +344,147 @@ paths:
       summary: update party
       tags:
       - party
+  /parties/{partyHash}/pins:
+    get:
+      description: List the pins under the party
+      operationId: pin#list
+      parameters:
+      - description: Party Hash
+        in: path
+        name: partyHash
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PinbasePinCollection'
+      schemes:
+      - http
+      summary: list pin
+      tags:
+      - pin
+    post:
+      description: Create a pin under the party
+      operationId: pin#create
+      parameters:
+      - description: Party Hash
+        in: path
+        name: partyHash
+        required: true
+        type: string
+      - in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/CreatePinPayload'
+      responses:
+        "201":
+          description: Resource created
+          headers:
+            Location:
+              description: href to the created resource
+              pattern: /parties/.+/pins/.+
+              type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/error'
+      schemes:
+      - http
+      summary: create pin
+      tags:
+      - pin
+  /parties/{partyHash}/pins/{pinHash}:
+    delete:
+      description: Delete a pin under the party
+      operationId: pin#delete
+      parameters:
+      - description: Party Hash
+        in: path
+        name: partyHash
+        required: true
+        type: string
+      - description: Pin Hash
+        in: path
+        name: pinHash
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/error'
+        "404":
+          description: Not Found
+      schemes:
+      - http
+      summary: delete pin
+      tags:
+      - pin
+    get:
+      description: Get the pin under the party by hash
+      operationId: pin#show
+      parameters:
+      - description: Party Hash
+        in: path
+        name: partyHash
+        required: true
+        type: string
+      - description: Pin Hash
+        in: path
+        name: pinHash
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PinbasePin'
+        "404":
+          description: Not Found
+      schemes:
+      - http
+      summary: show pin
+      tags:
+      - pin
+    patch:
+      description: Update a pin under the party
+      operationId: pin#update
+      parameters:
+      - description: Party Hash
+        in: path
+        name: partyHash
+        required: true
+        type: string
+      - description: Pin Hash
+        in: path
+        name: pinHash
+        required: true
+        type: string
+      - in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/pin-update-payload'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PinbasePin'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/error'
+        "404":
+          description: Not Found
+      schemes:
+      - http
+      summary: update pin
+      tags:
+      - pin
 produces:
 - application/json
 responses:

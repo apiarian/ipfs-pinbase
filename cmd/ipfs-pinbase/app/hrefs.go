@@ -20,3 +20,10 @@ func PartyHref(partyHash interface{}) string {
 	parampartyHash := strings.TrimLeftFunc(fmt.Sprintf("%v", partyHash), func(r rune) bool { return r == '/' })
 	return fmt.Sprintf("/api/parties/%v", parampartyHash)
 }
+
+// PinHref returns the resource href.
+func PinHref(partyHash, pinHash interface{}) string {
+	parampartyHash := strings.TrimLeftFunc(fmt.Sprintf("%v", partyHash), func(r rune) bool { return r == '/' })
+	parampinHash := strings.TrimLeftFunc(fmt.Sprintf("%v", pinHash), func(r rune) bool { return r == '/' })
+	return fmt.Sprintf("/api/parties/%v/pins/%v", parampartyHash, parampinHash)
+}

@@ -243,3 +243,273 @@ func (ctx *UpdatePartyContext) NotFound() error {
 	ctx.ResponseData.WriteHeader(404)
 	return nil
 }
+
+// CreatePinContext provides the pin create action context.
+type CreatePinContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	PartyHash string
+	Payload   *CreatePinPayload
+}
+
+// NewCreatePinContext parses the incoming request URL and body, performs validations and creates the
+// context used by the pin controller create action.
+func NewCreatePinContext(ctx context.Context, service *goa.Service) (*CreatePinContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	rctx := CreatePinContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramPartyHash := req.Params["partyHash"]
+	if len(paramPartyHash) > 0 {
+		rawPartyHash := paramPartyHash[0]
+		rctx.PartyHash = rawPartyHash
+	}
+	return &rctx, err
+}
+
+// createPinPayload is the pin create action payload.
+type createPinPayload struct {
+	// Aliases for the pinned object
+	Aliases []string `form:"aliases,omitempty" json:"aliases,omitempty" xml:"aliases,omitempty"`
+	// The hash of the object to be pinned
+	Hash *string `form:"hash,omitempty" json:"hash,omitempty" xml:"hash,omitempty"`
+	// Indicates that the party wants to actually pin the object
+	WantPinned *bool `form:"want-pinned,omitempty" json:"want-pinned,omitempty" xml:"want-pinned,omitempty"`
+}
+
+// Validate runs the validation rules defined in the design.
+func (payload *createPinPayload) Validate() (err error) {
+	if payload.Hash == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "hash"))
+	}
+	if payload.Aliases == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "aliases"))
+	}
+	if payload.WantPinned == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "want-pinned"))
+	}
+	return
+}
+
+// Publicize creates CreatePinPayload from createPinPayload
+func (payload *createPinPayload) Publicize() *CreatePinPayload {
+	var pub CreatePinPayload
+	if payload.Aliases != nil {
+		pub.Aliases = payload.Aliases
+	}
+	if payload.Hash != nil {
+		pub.Hash = *payload.Hash
+	}
+	if payload.WantPinned != nil {
+		pub.WantPinned = *payload.WantPinned
+	}
+	return &pub
+}
+
+// CreatePinPayload is the pin create action payload.
+type CreatePinPayload struct {
+	// Aliases for the pinned object
+	Aliases []string `form:"aliases" json:"aliases" xml:"aliases"`
+	// The hash of the object to be pinned
+	Hash string `form:"hash" json:"hash" xml:"hash"`
+	// Indicates that the party wants to actually pin the object
+	WantPinned bool `form:"want-pinned" json:"want-pinned" xml:"want-pinned"`
+}
+
+// Validate runs the validation rules defined in the design.
+func (payload *CreatePinPayload) Validate() (err error) {
+	if payload.Hash == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "hash"))
+	}
+	if payload.Aliases == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "aliases"))
+	}
+
+	return
+}
+
+// Created sends a HTTP response with status code 201.
+func (ctx *CreatePinContext) Created() error {
+	ctx.ResponseData.WriteHeader(201)
+	return nil
+}
+
+// BadRequest sends a HTTP response with status code 400.
+func (ctx *CreatePinContext) BadRequest(r error) error {
+	ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
+}
+
+// DeletePinContext provides the pin delete action context.
+type DeletePinContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	PartyHash string
+	PinHash   string
+}
+
+// NewDeletePinContext parses the incoming request URL and body, performs validations and creates the
+// context used by the pin controller delete action.
+func NewDeletePinContext(ctx context.Context, service *goa.Service) (*DeletePinContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	rctx := DeletePinContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramPartyHash := req.Params["partyHash"]
+	if len(paramPartyHash) > 0 {
+		rawPartyHash := paramPartyHash[0]
+		rctx.PartyHash = rawPartyHash
+	}
+	paramPinHash := req.Params["pinHash"]
+	if len(paramPinHash) > 0 {
+		rawPinHash := paramPinHash[0]
+		rctx.PinHash = rawPinHash
+	}
+	return &rctx, err
+}
+
+// NoContent sends a HTTP response with status code 204.
+func (ctx *DeletePinContext) NoContent() error {
+	ctx.ResponseData.WriteHeader(204)
+	return nil
+}
+
+// BadRequest sends a HTTP response with status code 400.
+func (ctx *DeletePinContext) BadRequest(r error) error {
+	ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
+}
+
+// NotFound sends a HTTP response with status code 404.
+func (ctx *DeletePinContext) NotFound() error {
+	ctx.ResponseData.WriteHeader(404)
+	return nil
+}
+
+// ListPinContext provides the pin list action context.
+type ListPinContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	PartyHash string
+}
+
+// NewListPinContext parses the incoming request URL and body, performs validations and creates the
+// context used by the pin controller list action.
+func NewListPinContext(ctx context.Context, service *goa.Service) (*ListPinContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	rctx := ListPinContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramPartyHash := req.Params["partyHash"]
+	if len(paramPartyHash) > 0 {
+		rawPartyHash := paramPartyHash[0]
+		rctx.PartyHash = rawPartyHash
+	}
+	return &rctx, err
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *ListPinContext) OK(r PinbasePinCollection) error {
+	ctx.ResponseData.Header().Set("Content-Type", "application/vnd.pinbase.pin+json; type=collection")
+	if r == nil {
+		r = PinbasePinCollection{}
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
+// ShowPinContext provides the pin show action context.
+type ShowPinContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	PartyHash string
+	PinHash   string
+}
+
+// NewShowPinContext parses the incoming request URL and body, performs validations and creates the
+// context used by the pin controller show action.
+func NewShowPinContext(ctx context.Context, service *goa.Service) (*ShowPinContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	rctx := ShowPinContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramPartyHash := req.Params["partyHash"]
+	if len(paramPartyHash) > 0 {
+		rawPartyHash := paramPartyHash[0]
+		rctx.PartyHash = rawPartyHash
+	}
+	paramPinHash := req.Params["pinHash"]
+	if len(paramPinHash) > 0 {
+		rawPinHash := paramPinHash[0]
+		rctx.PinHash = rawPinHash
+	}
+	return &rctx, err
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *ShowPinContext) OK(r *PinbasePin) error {
+	ctx.ResponseData.Header().Set("Content-Type", "application/vnd.pinbase.pin+json")
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
+// NotFound sends a HTTP response with status code 404.
+func (ctx *ShowPinContext) NotFound() error {
+	ctx.ResponseData.WriteHeader(404)
+	return nil
+}
+
+// UpdatePinContext provides the pin update action context.
+type UpdatePinContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	PartyHash string
+	PinHash   string
+	Payload   *PinUpdatePayload
+}
+
+// NewUpdatePinContext parses the incoming request URL and body, performs validations and creates the
+// context used by the pin controller update action.
+func NewUpdatePinContext(ctx context.Context, service *goa.Service) (*UpdatePinContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	rctx := UpdatePinContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramPartyHash := req.Params["partyHash"]
+	if len(paramPartyHash) > 0 {
+		rawPartyHash := paramPartyHash[0]
+		rctx.PartyHash = rawPartyHash
+	}
+	paramPinHash := req.Params["pinHash"]
+	if len(paramPinHash) > 0 {
+		rawPinHash := paramPinHash[0]
+		rctx.PinHash = rawPinHash
+	}
+	return &rctx, err
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *UpdatePinContext) OK(r *PinbasePin) error {
+	ctx.ResponseData.Header().Set("Content-Type", "application/vnd.pinbase.pin+json")
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
+// BadRequest sends a HTTP response with status code 400.
+func (ctx *UpdatePinContext) BadRequest(r error) error {
+	ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
+}
+
+// NotFound sends a HTTP response with status code 404.
+func (ctx *UpdatePinContext) NotFound() error {
+	ctx.ResponseData.WriteHeader(404)
+	return nil
+}

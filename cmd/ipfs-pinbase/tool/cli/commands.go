@@ -62,6 +62,51 @@ type (
 		PartyHash   string
 		PrettyPrint bool
 	}
+
+	// CreatePinCommand is the command line data structure for the create action of pin
+	CreatePinCommand struct {
+		Payload     string
+		ContentType string
+		// Party Hash
+		PartyHash   string
+		PrettyPrint bool
+	}
+
+	// DeletePinCommand is the command line data structure for the delete action of pin
+	DeletePinCommand struct {
+		// Party Hash
+		PartyHash string
+		// Pin Hash
+		PinHash     string
+		PrettyPrint bool
+	}
+
+	// ListPinCommand is the command line data structure for the list action of pin
+	ListPinCommand struct {
+		// Party Hash
+		PartyHash   string
+		PrettyPrint bool
+	}
+
+	// ShowPinCommand is the command line data structure for the show action of pin
+	ShowPinCommand struct {
+		// Party Hash
+		PartyHash string
+		// Pin Hash
+		PinHash     string
+		PrettyPrint bool
+	}
+
+	// UpdatePinCommand is the command line data structure for the update action of pin
+	UpdatePinCommand struct {
+		Payload     string
+		ContentType string
+		// Party Hash
+		PartyHash string
+		// Pin Hash
+		PinHash     string
+		PrettyPrint bool
+	}
 )
 
 // RegisterCommands registers the resource action CLI commands.
@@ -69,7 +114,7 @@ func RegisterCommands(app *cobra.Command, c *client.Client) {
 	var command, sub *cobra.Command
 	command = &cobra.Command{
 		Use:   "create",
-		Short: `Create a party`,
+		Short: `create action`,
 	}
 	tmp1 := new(CreatePartyCommand)
 	sub = &cobra.Command{
@@ -80,51 +125,53 @@ func RegisterCommands(app *cobra.Command, c *client.Client) {
 Payload example:
 
 {
-   "description": "Nostrum architecto repellendus molestiae et.",
-   "hash": "Rerum accusamus voluptates atque."
+   "description": "Commodi ea magni mollitia dicta.",
+   "hash": "Magni ullam id dolorem sunt consequatur incidunt."
 }`,
 		RunE: func(cmd *cobra.Command, args []string) error { return tmp1.Run(c, args) },
 	}
 	tmp1.RegisterFlags(sub, c)
 	sub.PersistentFlags().BoolVar(&tmp1.PrettyPrint, "pp", false, "Pretty print response body")
 	command.AddCommand(sub)
-	app.AddCommand(command)
-	command = &cobra.Command{
-		Use:   "delete",
-		Short: `Delete a party`,
-	}
-	tmp2 := new(DeletePartyCommand)
+	tmp2 := new(CreatePinCommand)
 	sub = &cobra.Command{
-		Use:   `party ["/api/parties/PARTYHASH"]`,
-		Short: `The Pinbase Party resource`,
-		RunE:  func(cmd *cobra.Command, args []string) error { return tmp2.Run(c, args) },
+		Use:   `pin ["/api/parties/PARTYHASH/pins"]`,
+		Short: `A thing to pin in IPFS`,
+		Long: `A thing to pin in IPFS
+
+Payload example:
+
+{
+   "aliases": [
+      "Ipsa architecto.",
+      "Ipsa architecto."
+   ],
+   "hash": "Ut velit.",
+   "want-pinned": true
+}`,
+		RunE: func(cmd *cobra.Command, args []string) error { return tmp2.Run(c, args) },
 	}
 	tmp2.RegisterFlags(sub, c)
 	sub.PersistentFlags().BoolVar(&tmp2.PrettyPrint, "pp", false, "Pretty print response body")
 	command.AddCommand(sub)
 	app.AddCommand(command)
 	command = &cobra.Command{
-		Use:   "list",
-		Short: `List the parties available in this pinbase`,
+		Use:   "delete",
+		Short: `delete action`,
 	}
-	tmp3 := new(ListPartyCommand)
+	tmp3 := new(DeletePartyCommand)
 	sub = &cobra.Command{
-		Use:   `party ["/api/parties"]`,
+		Use:   `party ["/api/parties/PARTYHASH"]`,
 		Short: `The Pinbase Party resource`,
 		RunE:  func(cmd *cobra.Command, args []string) error { return tmp3.Run(c, args) },
 	}
 	tmp3.RegisterFlags(sub, c)
 	sub.PersistentFlags().BoolVar(&tmp3.PrettyPrint, "pp", false, "Pretty print response body")
 	command.AddCommand(sub)
-	app.AddCommand(command)
-	command = &cobra.Command{
-		Use:   "show",
-		Short: `Get the party by hash`,
-	}
-	tmp4 := new(ShowPartyCommand)
+	tmp4 := new(DeletePinCommand)
 	sub = &cobra.Command{
-		Use:   `party ["/api/parties/PARTYHASH"]`,
-		Short: `The Pinbase Party resource`,
+		Use:   `pin ["/api/parties/PARTYHASH/pins/PINHASH"]`,
+		Short: `A thing to pin in IPFS`,
 		RunE:  func(cmd *cobra.Command, args []string) error { return tmp4.Run(c, args) },
 	}
 	tmp4.RegisterFlags(sub, c)
@@ -132,10 +179,56 @@ Payload example:
 	command.AddCommand(sub)
 	app.AddCommand(command)
 	command = &cobra.Command{
-		Use:   "update",
-		Short: `Change a party's description`,
+		Use:   "list",
+		Short: `list action`,
 	}
-	tmp5 := new(UpdatePartyCommand)
+	tmp5 := new(ListPartyCommand)
+	sub = &cobra.Command{
+		Use:   `party ["/api/parties"]`,
+		Short: `The Pinbase Party resource`,
+		RunE:  func(cmd *cobra.Command, args []string) error { return tmp5.Run(c, args) },
+	}
+	tmp5.RegisterFlags(sub, c)
+	sub.PersistentFlags().BoolVar(&tmp5.PrettyPrint, "pp", false, "Pretty print response body")
+	command.AddCommand(sub)
+	tmp6 := new(ListPinCommand)
+	sub = &cobra.Command{
+		Use:   `pin ["/api/parties/PARTYHASH/pins"]`,
+		Short: `A thing to pin in IPFS`,
+		RunE:  func(cmd *cobra.Command, args []string) error { return tmp6.Run(c, args) },
+	}
+	tmp6.RegisterFlags(sub, c)
+	sub.PersistentFlags().BoolVar(&tmp6.PrettyPrint, "pp", false, "Pretty print response body")
+	command.AddCommand(sub)
+	app.AddCommand(command)
+	command = &cobra.Command{
+		Use:   "show",
+		Short: `show action`,
+	}
+	tmp7 := new(ShowPartyCommand)
+	sub = &cobra.Command{
+		Use:   `party ["/api/parties/PARTYHASH"]`,
+		Short: `The Pinbase Party resource`,
+		RunE:  func(cmd *cobra.Command, args []string) error { return tmp7.Run(c, args) },
+	}
+	tmp7.RegisterFlags(sub, c)
+	sub.PersistentFlags().BoolVar(&tmp7.PrettyPrint, "pp", false, "Pretty print response body")
+	command.AddCommand(sub)
+	tmp8 := new(ShowPinCommand)
+	sub = &cobra.Command{
+		Use:   `pin ["/api/parties/PARTYHASH/pins/PINHASH"]`,
+		Short: `A thing to pin in IPFS`,
+		RunE:  func(cmd *cobra.Command, args []string) error { return tmp8.Run(c, args) },
+	}
+	tmp8.RegisterFlags(sub, c)
+	sub.PersistentFlags().BoolVar(&tmp8.PrettyPrint, "pp", false, "Pretty print response body")
+	command.AddCommand(sub)
+	app.AddCommand(command)
+	command = &cobra.Command{
+		Use:   "update",
+		Short: `update action`,
+	}
+	tmp9 := new(UpdatePartyCommand)
 	sub = &cobra.Command{
 		Use:   `party ["/api/parties/PARTYHASH"]`,
 		Short: `The Pinbase Party resource`,
@@ -144,12 +237,31 @@ Payload example:
 Payload example:
 
 {
-   "description": "Facilis vero minus."
+   "description": "Doloremque modi et quae."
 }`,
-		RunE: func(cmd *cobra.Command, args []string) error { return tmp5.Run(c, args) },
+		RunE: func(cmd *cobra.Command, args []string) error { return tmp9.Run(c, args) },
 	}
-	tmp5.RegisterFlags(sub, c)
-	sub.PersistentFlags().BoolVar(&tmp5.PrettyPrint, "pp", false, "Pretty print response body")
+	tmp9.RegisterFlags(sub, c)
+	sub.PersistentFlags().BoolVar(&tmp9.PrettyPrint, "pp", false, "Pretty print response body")
+	command.AddCommand(sub)
+	tmp10 := new(UpdatePinCommand)
+	sub = &cobra.Command{
+		Use:   `pin ["/api/parties/PARTYHASH/pins/PINHASH"]`,
+		Short: `A thing to pin in IPFS`,
+		Long: `A thing to pin in IPFS
+
+Payload example:
+
+{
+   "aliases": [
+      "Provident est eum quis rem ut."
+   ],
+   "want-pinned": false
+}`,
+		RunE: func(cmd *cobra.Command, args []string) error { return tmp10.Run(c, args) },
+	}
+	tmp10.RegisterFlags(sub, c)
+	sub.PersistentFlags().BoolVar(&tmp10.PrettyPrint, "pp", false, "Pretty print response body")
 	command.AddCommand(sub)
 	app.AddCommand(command)
 }
@@ -449,4 +561,158 @@ func (cmd *UpdatePartyCommand) RegisterFlags(cc *cobra.Command, c *client.Client
 	cc.Flags().StringVar(&cmd.ContentType, "content", "", "Request content type override, e.g. 'application/x-www-form-urlencoded'")
 	var partyHash string
 	cc.Flags().StringVar(&cmd.PartyHash, "partyHash", partyHash, `Party Hash`)
+}
+
+// Run makes the HTTP request corresponding to the CreatePinCommand command.
+func (cmd *CreatePinCommand) Run(c *client.Client, args []string) error {
+	var path string
+	if len(args) > 0 {
+		path = args[0]
+	} else {
+		path = fmt.Sprintf("/api/parties/%v/pins", url.QueryEscape(cmd.PartyHash))
+	}
+	var payload client.CreatePinPayload
+	if cmd.Payload != "" {
+		err := json.Unmarshal([]byte(cmd.Payload), &payload)
+		if err != nil {
+			return fmt.Errorf("failed to deserialize payload: %s", err)
+		}
+	}
+	logger := goa.NewLogger(log.New(os.Stderr, "", log.LstdFlags))
+	ctx := goa.WithLogger(context.Background(), logger)
+	resp, err := c.CreatePin(ctx, path, &payload)
+	if err != nil {
+		goa.LogError(ctx, "failed", "err", err)
+		return err
+	}
+
+	goaclient.HandleResponse(c.Client, resp, cmd.PrettyPrint)
+	return nil
+}
+
+// RegisterFlags registers the command flags with the command line.
+func (cmd *CreatePinCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
+	cc.Flags().StringVar(&cmd.Payload, "payload", "", "Request body encoded in JSON")
+	cc.Flags().StringVar(&cmd.ContentType, "content", "", "Request content type override, e.g. 'application/x-www-form-urlencoded'")
+	var partyHash string
+	cc.Flags().StringVar(&cmd.PartyHash, "partyHash", partyHash, `Party Hash`)
+}
+
+// Run makes the HTTP request corresponding to the DeletePinCommand command.
+func (cmd *DeletePinCommand) Run(c *client.Client, args []string) error {
+	var path string
+	if len(args) > 0 {
+		path = args[0]
+	} else {
+		path = fmt.Sprintf("/api/parties/%v/pins/%v", url.QueryEscape(cmd.PartyHash), url.QueryEscape(cmd.PinHash))
+	}
+	logger := goa.NewLogger(log.New(os.Stderr, "", log.LstdFlags))
+	ctx := goa.WithLogger(context.Background(), logger)
+	resp, err := c.DeletePin(ctx, path)
+	if err != nil {
+		goa.LogError(ctx, "failed", "err", err)
+		return err
+	}
+
+	goaclient.HandleResponse(c.Client, resp, cmd.PrettyPrint)
+	return nil
+}
+
+// RegisterFlags registers the command flags with the command line.
+func (cmd *DeletePinCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
+	var partyHash string
+	cc.Flags().StringVar(&cmd.PartyHash, "partyHash", partyHash, `Party Hash`)
+	var pinHash string
+	cc.Flags().StringVar(&cmd.PinHash, "pinHash", pinHash, `Pin Hash`)
+}
+
+// Run makes the HTTP request corresponding to the ListPinCommand command.
+func (cmd *ListPinCommand) Run(c *client.Client, args []string) error {
+	var path string
+	if len(args) > 0 {
+		path = args[0]
+	} else {
+		path = fmt.Sprintf("/api/parties/%v/pins", url.QueryEscape(cmd.PartyHash))
+	}
+	logger := goa.NewLogger(log.New(os.Stderr, "", log.LstdFlags))
+	ctx := goa.WithLogger(context.Background(), logger)
+	resp, err := c.ListPin(ctx, path)
+	if err != nil {
+		goa.LogError(ctx, "failed", "err", err)
+		return err
+	}
+
+	goaclient.HandleResponse(c.Client, resp, cmd.PrettyPrint)
+	return nil
+}
+
+// RegisterFlags registers the command flags with the command line.
+func (cmd *ListPinCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
+	var partyHash string
+	cc.Flags().StringVar(&cmd.PartyHash, "partyHash", partyHash, `Party Hash`)
+}
+
+// Run makes the HTTP request corresponding to the ShowPinCommand command.
+func (cmd *ShowPinCommand) Run(c *client.Client, args []string) error {
+	var path string
+	if len(args) > 0 {
+		path = args[0]
+	} else {
+		path = fmt.Sprintf("/api/parties/%v/pins/%v", url.QueryEscape(cmd.PartyHash), url.QueryEscape(cmd.PinHash))
+	}
+	logger := goa.NewLogger(log.New(os.Stderr, "", log.LstdFlags))
+	ctx := goa.WithLogger(context.Background(), logger)
+	resp, err := c.ShowPin(ctx, path)
+	if err != nil {
+		goa.LogError(ctx, "failed", "err", err)
+		return err
+	}
+
+	goaclient.HandleResponse(c.Client, resp, cmd.PrettyPrint)
+	return nil
+}
+
+// RegisterFlags registers the command flags with the command line.
+func (cmd *ShowPinCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
+	var partyHash string
+	cc.Flags().StringVar(&cmd.PartyHash, "partyHash", partyHash, `Party Hash`)
+	var pinHash string
+	cc.Flags().StringVar(&cmd.PinHash, "pinHash", pinHash, `Pin Hash`)
+}
+
+// Run makes the HTTP request corresponding to the UpdatePinCommand command.
+func (cmd *UpdatePinCommand) Run(c *client.Client, args []string) error {
+	var path string
+	if len(args) > 0 {
+		path = args[0]
+	} else {
+		path = fmt.Sprintf("/api/parties/%v/pins/%v", url.QueryEscape(cmd.PartyHash), url.QueryEscape(cmd.PinHash))
+	}
+	var payload client.PinUpdatePayload
+	if cmd.Payload != "" {
+		err := json.Unmarshal([]byte(cmd.Payload), &payload)
+		if err != nil {
+			return fmt.Errorf("failed to deserialize payload: %s", err)
+		}
+	}
+	logger := goa.NewLogger(log.New(os.Stderr, "", log.LstdFlags))
+	ctx := goa.WithLogger(context.Background(), logger)
+	resp, err := c.UpdatePin(ctx, path, &payload)
+	if err != nil {
+		goa.LogError(ctx, "failed", "err", err)
+		return err
+	}
+
+	goaclient.HandleResponse(c.Client, resp, cmd.PrettyPrint)
+	return nil
+}
+
+// RegisterFlags registers the command flags with the command line.
+func (cmd *UpdatePinCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
+	cc.Flags().StringVar(&cmd.Payload, "payload", "", "Request body encoded in JSON")
+	cc.Flags().StringVar(&cmd.ContentType, "content", "", "Request content type override, e.g. 'application/x-www-form-urlencoded'")
+	var partyHash string
+	cc.Flags().StringVar(&cmd.PartyHash, "partyHash", partyHash, `Party Hash`)
+	var pinHash string
+	cc.Flags().StringVar(&cmd.PinHash, "pinHash", pinHash, `Pin Hash`)
 }

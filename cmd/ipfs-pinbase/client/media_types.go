@@ -73,3 +73,68 @@ func (c *Client) DecodePinbasePartyCollection(resp *http.Response) (PinbaseParty
 	err := c.Decoder.Decode(&decoded, resp.Body, resp.Header.Get("Content-Type"))
 	return decoded, err
 }
+
+// A Pin for a Party (default view)
+//
+// Identifier: application/vnd.pinbase.pin+json; view=default
+type PinbasePin struct {
+	// Aliases for the pinned object
+	Aliases []string `form:"aliases" json:"aliases" xml:"aliases"`
+	// The hash of the object to be pinned
+	Hash string `form:"hash" json:"hash" xml:"hash"`
+	// Last pin error message
+	LastError string `form:"last-error" json:"last-error" xml:"last-error"`
+	// The status of the pin
+	Status string `form:"status" json:"status" xml:"status"`
+	// Indicates that the party wants to actually pin the object
+	WantPinned bool `form:"want-pinned" json:"want-pinned" xml:"want-pinned"`
+}
+
+// Validate validates the PinbasePin media type instance.
+func (mt *PinbasePin) Validate() (err error) {
+	if mt.Hash == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "hash"))
+	}
+	if mt.Aliases == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "aliases"))
+	}
+
+	if mt.Status == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "status"))
+	}
+	if mt.LastError == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "last-error"))
+	}
+	return
+}
+
+// DecodePinbasePin decodes the PinbasePin instance encoded in resp body.
+func (c *Client) DecodePinbasePin(resp *http.Response) (*PinbasePin, error) {
+	var decoded PinbasePin
+	err := c.Decoder.Decode(&decoded, resp.Body, resp.Header.Get("Content-Type"))
+	return &decoded, err
+}
+
+// PinbasePinCollection is the media type for an array of PinbasePin (default view)
+//
+// Identifier: application/vnd.pinbase.pin+json; type=collection; view=default
+type PinbasePinCollection []*PinbasePin
+
+// Validate validates the PinbasePinCollection media type instance.
+func (mt PinbasePinCollection) Validate() (err error) {
+	for _, e := range mt {
+		if e != nil {
+			if err2 := e.Validate(); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
+	}
+	return
+}
+
+// DecodePinbasePinCollection decodes the PinbasePinCollection instance encoded in resp body.
+func (c *Client) DecodePinbasePinCollection(resp *http.Response) (PinbasePinCollection, error) {
+	var decoded PinbasePinCollection
+	err := c.Decoder.Decode(&decoded, resp.Body, resp.Header.Get("Content-Type"))
+	return decoded, err
+}

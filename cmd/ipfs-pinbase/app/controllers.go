@@ -11,9 +11,10 @@
 package app
 
 import (
+	"net/http"
+
 	"github.com/goadesign/goa"
 	"golang.org/x/net/context"
-	"net/http"
 )
 
 // initService sets up the service encoders, decoders and mux.
@@ -148,6 +149,134 @@ func unmarshalCreatePartyPayload(ctx context.Context, service *goa.Service, req 
 // unmarshalUpdatePartyPayload unmarshals the request body into the context request data Payload field.
 func unmarshalUpdatePartyPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
 	payload := &partyUpdatePayload{}
+	if err := service.DecodeRequest(req, payload); err != nil {
+		return err
+	}
+	goa.ContextRequest(ctx).Payload = payload.Publicize()
+	return nil
+}
+
+// PinController is the controller interface for the Pin actions.
+type PinController interface {
+	goa.Muxer
+	Create(*CreatePinContext) error
+	Delete(*DeletePinContext) error
+	List(*ListPinContext) error
+	Show(*ShowPinContext) error
+	Update(*UpdatePinContext) error
+}
+
+// MountPinController "mounts" a Pin resource controller on the given service.
+func MountPinController(service *goa.Service, ctrl PinController) {
+	initService(service)
+	var h goa.Handler
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewCreatePinContext(ctx, service)
+		if err != nil {
+			return err
+		}
+		// Build the payload
+		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
+			rctx.Payload = rawPayload.(*CreatePinPayload)
+		} else {
+			return goa.MissingPayloadError()
+		}
+		return ctrl.Create(rctx)
+	}
+	service.Mux.Handle("POST", "/api/parties/:partyHash/pins", ctrl.MuxHandler("Create", h, unmarshalCreatePinPayload))
+	service.LogInfo("mount", "ctrl", "Pin", "action", "Create", "route", "POST /api/parties/:partyHash/pins")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewDeletePinContext(ctx, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.Delete(rctx)
+	}
+	service.Mux.Handle("DELETE", "/api/parties/:partyHash/pins/:pinHash", ctrl.MuxHandler("Delete", h, nil))
+	service.LogInfo("mount", "ctrl", "Pin", "action", "Delete", "route", "DELETE /api/parties/:partyHash/pins/:pinHash")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewListPinContext(ctx, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.List(rctx)
+	}
+	service.Mux.Handle("GET", "/api/parties/:partyHash/pins", ctrl.MuxHandler("List", h, nil))
+	service.LogInfo("mount", "ctrl", "Pin", "action", "List", "route", "GET /api/parties/:partyHash/pins")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewShowPinContext(ctx, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.Show(rctx)
+	}
+	service.Mux.Handle("GET", "/api/parties/:partyHash/pins/:pinHash", ctrl.MuxHandler("Show", h, nil))
+	service.LogInfo("mount", "ctrl", "Pin", "action", "Show", "route", "GET /api/parties/:partyHash/pins/:pinHash")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewUpdatePinContext(ctx, service)
+		if err != nil {
+			return err
+		}
+		// Build the payload
+		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
+			rctx.Payload = rawPayload.(*PinUpdatePayload)
+		} else {
+			return goa.MissingPayloadError()
+		}
+		return ctrl.Update(rctx)
+	}
+	service.Mux.Handle("PATCH", "/api/parties/:partyHash/pins/:pinHash", ctrl.MuxHandler("Update", h, unmarshalUpdatePinPayload))
+	service.LogInfo("mount", "ctrl", "Pin", "action", "Update", "route", "PATCH /api/parties/:partyHash/pins/:pinHash")
+}
+
+// unmarshalCreatePinPayload unmarshals the request body into the context request data Payload field.
+func unmarshalCreatePinPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
+	payload := &createPinPayload{}
+	if err := service.DecodeRequest(req, payload); err != nil {
+		return err
+	}
+	if err := payload.Validate(); err != nil {
+		// Initialize payload with private data structure so it can be logged
+		goa.ContextRequest(ctx).Payload = payload
+		return err
+	}
+	goa.ContextRequest(ctx).Payload = payload.Publicize()
+	return nil
+}
+
+// unmarshalUpdatePinPayload unmarshals the request body into the context request data Payload field.
+func unmarshalUpdatePinPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
+	payload := &pinUpdatePayload{}
 	if err := service.DecodeRequest(req, payload); err != nil {
 		return err
 	}
