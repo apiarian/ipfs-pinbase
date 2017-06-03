@@ -3,6 +3,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -34,9 +35,9 @@ func main() {
 		}
 	}(I)
 
-	done := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
 
-	go pinbase.ManagePins(done, P.PinBackend(), I, 5*time.Second)
+	go pinbase.ManagePins(ctx, P.PinBackend(), I, 5*time.Second)
 
 	// Create service
 	service := goa.New("pinbase")
@@ -59,6 +60,6 @@ func main() {
 		service.LogError("startup", "err", err)
 	}
 
-	close(done)
+	cancel()
 	log.Print("done")
 }

@@ -1,6 +1,7 @@
 package pinbase
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -123,7 +124,7 @@ type PinJuggler interface {
 }
 
 func ManagePins(
-	done <-chan struct{},
+	ctx context.Context,
 	pb PinBackend,
 	pj PinJuggler,
 	maxInterval time.Duration,
@@ -137,17 +138,19 @@ func ManagePins(
 		case <-pb.PinProcessorBump():
 			processPins(pb, pj)
 
+			if !t.Stop() {
+				<-t.C
+			}
+			t.Reset(maxInterval)
+
 		case <-t.C:
 			processPins(pb, pj)
 
-		case <-done:
+			t.Reset(maxInterval)
+
+		case <-ctx.Done():
 			return
 		}
-
-		if !t.Stop() {
-			<-t.C
-		}
-		t.Reset(maxInterval)
 	}
 }
 

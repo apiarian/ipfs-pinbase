@@ -1,6 +1,7 @@
 package pinbase
 
 import (
+	"context"
 	"sync"
 	"testing"
 	"time"
@@ -65,7 +66,7 @@ func (nj *NullJuggler) Pins() (map[Hash]struct{}, error) {
 var _ PinJuggler = &NullJuggler{}
 
 func TestManagePins(t *testing.T) {
-	done := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
 	pb := NewNullBackend()
 	pj := NewNullJuggler()
 
@@ -73,7 +74,7 @@ func TestManagePins(t *testing.T) {
 		t.Errorf("did not start out with a zero reqs call count: %d", c)
 	}
 
-	go ManagePins(done, pb, pj, 3*time.Second)
+	go ManagePins(ctx, pb, pj, 1*time.Second)
 
 	time.Sleep(10 * time.Millisecond)
 
@@ -90,13 +91,20 @@ func TestManagePins(t *testing.T) {
 	}
 
 	// wait for the timeout to trip
-	time.Sleep(4 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	if c := pb.PinsCallCount(); c != 3 {
 		t.Errorf("reqs call count should be 3: %d", c)
 	}
 
-	close(done)
+	// wait for another second for the timeout to trip
+	time.Sleep(1250 * time.Millisecond)
+
+	if c := pb.PinsCallCount(); c != 4 {
+		t.Errorf("reqs call count should be 4: %d", c)
+	}
+
+	cancel()
 
 	time.Sleep(10 * time.Millisecond)
 
@@ -104,7 +112,7 @@ func TestManagePins(t *testing.T) {
 
 	time.Sleep(10 * time.Millisecond)
 
-	if c := pb.PinsCallCount(); c != 3 {
-		t.Errorf("reqs call count should be 3: %d", c)
+	if c := pb.PinsCallCount(); c != 4 {
+		t.Errorf("reqs call count should be 4: %d", c)
 	}
 }
