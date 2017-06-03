@@ -10,7 +10,9 @@
 
 package app
 
-import "github.com/goadesign/goa"
+import (
+	"github.com/goadesign/goa"
+)
 
 // A Pinbase Party (default view)
 //

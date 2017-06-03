@@ -60,4 +60,5 @@ func main() {
 	}
 
 	close(done)
+	log.Print("done")
 }

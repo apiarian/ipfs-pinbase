@@ -28,6 +28,12 @@ var _ = API("pinbase", func() {
 	Consumes("application/json")
 	Produces("application/json")
 
+	Origin("*", func() {
+		Methods("GET", "POST", "PATCH", "DELETE")
+		Headers("Content-Type")
+		MaxAge(600)
+	})
+
 	ResponseTemplate(Created, func(pattern string) {
 		Description("Resource created")
 		Status(201)

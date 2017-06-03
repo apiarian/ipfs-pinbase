@@ -14,6 +14,7 @@ import (
 	"net/http"
 
 	"github.com/goadesign/goa"
+	"github.com/goadesign/goa/cors"
 	"golang.org/x/net/context"
 )
 
@@ -42,6 +43,8 @@ type PartyController interface {
 func MountPartyController(service *goa.Service, ctrl PartyController) {
 	initService(service)
 	var h goa.Handler
+	service.Mux.Handle("OPTIONS", "/api/parties", ctrl.MuxHandler("preflight", handlePartyOrigin(cors.HandlePreflight()), nil))
+	service.Mux.Handle("OPTIONS", "/api/parties/:partyHash", ctrl.MuxHandler("preflight", handlePartyOrigin(cors.HandlePreflight()), nil))
 
 	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 		// Check if there was an error loading the request
@@ -61,6 +64,7 @@ func MountPartyController(service *goa.Service, ctrl PartyController) {
 		}
 		return ctrl.Create(rctx)
 	}
+	h = handlePartyOrigin(h)
 	service.Mux.Handle("POST", "/api/parties", ctrl.MuxHandler("Create", h, unmarshalCreatePartyPayload))
 	service.LogInfo("mount", "ctrl", "Party", "action", "Create", "route", "POST /api/parties")
 
@@ -76,6 +80,7 @@ func MountPartyController(service *goa.Service, ctrl PartyController) {
 		}
 		return ctrl.Delete(rctx)
 	}
+	h = handlePartyOrigin(h)
 	service.Mux.Handle("DELETE", "/api/parties/:partyHash", ctrl.MuxHandler("Delete", h, nil))
 	service.LogInfo("mount", "ctrl", "Party", "action", "Delete", "route", "DELETE /api/parties/:partyHash")
 
@@ -91,6 +96,7 @@ func MountPartyController(service *goa.Service, ctrl PartyController) {
 		}
 		return ctrl.List(rctx)
 	}
+	h = handlePartyOrigin(h)
 	service.Mux.Handle("GET", "/api/parties", ctrl.MuxHandler("List", h, nil))
 	service.LogInfo("mount", "ctrl", "Party", "action", "List", "route", "GET /api/parties")
 
@@ -106,6 +112,7 @@ func MountPartyController(service *goa.Service, ctrl PartyController) {
 		}
 		return ctrl.Show(rctx)
 	}
+	h = handlePartyOrigin(h)
 	service.Mux.Handle("GET", "/api/parties/:partyHash", ctrl.MuxHandler("Show", h, nil))
 	service.LogInfo("mount", "ctrl", "Party", "action", "Show", "route", "GET /api/parties/:partyHash")
 
@@ -127,8 +134,35 @@ func MountPartyController(service *goa.Service, ctrl PartyController) {
 		}
 		return ctrl.Update(rctx)
 	}
+	h = handlePartyOrigin(h)
 	service.Mux.Handle("PATCH", "/api/parties/:partyHash", ctrl.MuxHandler("Update", h, unmarshalUpdatePartyPayload))
 	service.LogInfo("mount", "ctrl", "Party", "action", "Update", "route", "PATCH /api/parties/:partyHash")
+}
+
+// handlePartyOrigin applies the CORS response headers corresponding to the origin.
+func handlePartyOrigin(h goa.Handler) goa.Handler {
+
+	return func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		origin := req.Header.Get("Origin")
+		if origin == "" {
+			// Not a CORS request
+			return h(ctx, rw, req)
+		}
+		if cors.MatchOrigin(origin, "*") {
+			ctx = goa.WithLogContext(ctx, "origin", origin)
+			rw.Header().Set("Access-Control-Allow-Origin", origin)
+			rw.Header().Set("Access-Control-Max-Age", "600")
+			rw.Header().Set("Access-Control-Allow-Credentials", "false")
+			if acrm := req.Header.Get("Access-Control-Request-Method"); acrm != "" {
+				// We are handling a preflight request
+				rw.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE")
+				rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			}
+			return h(ctx, rw, req)
+		}
+
+		return h(ctx, rw, req)
+	}
 }
 
 // unmarshalCreatePartyPayload unmarshals the request body into the context request data Payload field.
@@ -170,6 +204,8 @@ type PinController interface {
 func MountPinController(service *goa.Service, ctrl PinController) {
 	initService(service)
 	var h goa.Handler
+	service.Mux.Handle("OPTIONS", "/api/parties/:partyHash/pins", ctrl.MuxHandler("preflight", handlePinOrigin(cors.HandlePreflight()), nil))
+	service.Mux.Handle("OPTIONS", "/api/parties/:partyHash/pins/:pinHash", ctrl.MuxHandler("preflight", handlePinOrigin(cors.HandlePreflight()), nil))
 
 	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 		// Check if there was an error loading the request
@@ -189,6 +225,7 @@ func MountPinController(service *goa.Service, ctrl PinController) {
 		}
 		return ctrl.Create(rctx)
 	}
+	h = handlePinOrigin(h)
 	service.Mux.Handle("POST", "/api/parties/:partyHash/pins", ctrl.MuxHandler("Create", h, unmarshalCreatePinPayload))
 	service.LogInfo("mount", "ctrl", "Pin", "action", "Create", "route", "POST /api/parties/:partyHash/pins")
 
@@ -204,6 +241,7 @@ func MountPinController(service *goa.Service, ctrl PinController) {
 		}
 		return ctrl.Delete(rctx)
 	}
+	h = handlePinOrigin(h)
 	service.Mux.Handle("DELETE", "/api/parties/:partyHash/pins/:pinHash", ctrl.MuxHandler("Delete", h, nil))
 	service.LogInfo("mount", "ctrl", "Pin", "action", "Delete", "route", "DELETE /api/parties/:partyHash/pins/:pinHash")
 
@@ -219,6 +257,7 @@ func MountPinController(service *goa.Service, ctrl PinController) {
 		}
 		return ctrl.List(rctx)
 	}
+	h = handlePinOrigin(h)
 	service.Mux.Handle("GET", "/api/parties/:partyHash/pins", ctrl.MuxHandler("List", h, nil))
 	service.LogInfo("mount", "ctrl", "Pin", "action", "List", "route", "GET /api/parties/:partyHash/pins")
 
@@ -234,6 +273,7 @@ func MountPinController(service *goa.Service, ctrl PinController) {
 		}
 		return ctrl.Show(rctx)
 	}
+	h = handlePinOrigin(h)
 	service.Mux.Handle("GET", "/api/parties/:partyHash/pins/:pinHash", ctrl.MuxHandler("Show", h, nil))
 	service.LogInfo("mount", "ctrl", "Pin", "action", "Show", "route", "GET /api/parties/:partyHash/pins/:pinHash")
 
@@ -255,8 +295,35 @@ func MountPinController(service *goa.Service, ctrl PinController) {
 		}
 		return ctrl.Update(rctx)
 	}
+	h = handlePinOrigin(h)
 	service.Mux.Handle("PATCH", "/api/parties/:partyHash/pins/:pinHash", ctrl.MuxHandler("Update", h, unmarshalUpdatePinPayload))
 	service.LogInfo("mount", "ctrl", "Pin", "action", "Update", "route", "PATCH /api/parties/:partyHash/pins/:pinHash")
+}
+
+// handlePinOrigin applies the CORS response headers corresponding to the origin.
+func handlePinOrigin(h goa.Handler) goa.Handler {
+
+	return func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		origin := req.Header.Get("Origin")
+		if origin == "" {
+			// Not a CORS request
+			return h(ctx, rw, req)
+		}
+		if cors.MatchOrigin(origin, "*") {
+			ctx = goa.WithLogContext(ctx, "origin", origin)
+			rw.Header().Set("Access-Control-Allow-Origin", origin)
+			rw.Header().Set("Access-Control-Max-Age", "600")
+			rw.Header().Set("Access-Control-Allow-Credentials", "false")
+			if acrm := req.Header.Get("Access-Control-Request-Method"); acrm != "" {
+				// We are handling a preflight request
+				rw.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE")
+				rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			}
+			return h(ctx, rw, req)
+		}
+
+		return h(ctx, rw, req)
+	}
 }
 
 // unmarshalCreatePinPayload unmarshals the request body into the context request data Payload field.
