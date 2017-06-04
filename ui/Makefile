@@ -1,4 +1,4 @@
-ELMFILES := Main.elm PinCss.elm
+ELMFILES := Main.elm PinCss.elm Edit.elm Party.elm Party/Pin.elm
 
 
 build-elm-debug: ## build a debug version of the elm app
